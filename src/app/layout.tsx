@@ -3,6 +3,7 @@ import './globals.css';
 import InstallPrompt from '@/components/InstallPrompt';
 import OfflineBanner from '@/components/OfflineBanner';
 import TopAppBar from '@/components/TopAppBar';
+import UpdatePrompt from '@/components/UpdatePrompt';
 
 export const metadata: Metadata = {
   title: 'MessMate - Roommates Mess Attendance',
@@ -47,32 +48,13 @@ export default function RootLayout({
         <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
       </head>
       <body>
-        <OfflineBanner />
         <div className="app-container">
           <TopAppBar />
+          <UpdatePrompt />
+          <OfflineBanner />
           {children}
           <InstallPrompt />
         </div>
-
-        {/* Service Worker Registration */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator && window.location.protocol === 'https:' || window.location.hostname === 'localhost') {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js').then(
-                    function(reg) {
-                      console.log('[SW] Registered successfully:', reg.scope);
-                    },
-                    function(err) {
-                      console.warn('[SW] Registration failed:', err);
-                    }
-                  );
-                });
-              }
-            `,
-          }}
-        />
       </body>
     </html>
   );

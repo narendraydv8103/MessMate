@@ -10,6 +10,7 @@ import {
   getExistingSubscription,
   silentResubscribeIfMissing,
 } from '@/lib/push/client';
+import { getShortAppVersion } from '@/lib/version';
 
 interface Member {
   id: string;
@@ -547,6 +548,16 @@ export default function SettingsPage() {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.85rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ color: 'var(--text-secondary)' }}>App version</span>
+              <span
+                style={{ color: 'var(--text-primary)', fontFamily: 'monospace', fontWeight: 600 }}
+                data-testid="app-version"
+              >
+                {getShortAppVersion()}
+              </span>
+            </div>
+
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ color: 'var(--text-secondary)' }}>Web Push</span>
               <span className={`badge ${data?.push.isConfigured ? 'badge-green' : 'badge-muted'}`}>

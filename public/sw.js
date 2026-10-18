@@ -1,5 +1,8 @@
 // MessMate Service Worker (PWA Shell + Web Push)
-const CACHE_NAME = 'messmate-v1';
+// Derive cache name from build id (?v=<version>) or fallback
+const swUrl = new URL(self.location.href);
+const BUILD_VERSION = swUrl.searchParams.get('v') || 'v1';
+const CACHE_NAME = `messmate-${BUILD_VERSION}`;
 
 const SHELL_ASSETS = [
   '/',
@@ -15,16 +18,23 @@ const SHELL_ASSETS = [
 ];
 
 // Install: Pre-cache app shell assets
+// CRITICAL: Do NOT call skipWaiting automatically on install
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(SHELL_ASSETS);
     })
   );
-  self.skipWaiting();
 });
 
-// Activate: Delete any outdated caches
+// Message listener: Listen for explicit SKIP_WAITING command from client
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
+// Activate: Delete any outdated caches from previous versions
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
