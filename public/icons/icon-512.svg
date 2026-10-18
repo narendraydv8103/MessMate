@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <rect x="16" y="16" width="480" height="480" rx="96" fill="none" stroke="#334155" stroke-width="4"/>
+  
+  <!-- Outer Plate / Thali ring -->
+  <circle cx="256" cy="256" r="170" fill="#1e293b" stroke="#475569" stroke-width="10"/>
+  <circle cx="256" cy="256" r="144" fill="#0f172a" stroke="#334155" stroke-width="5"/>
+
+  <!-- Mess Tiffin Katori Bowls -->
+  <circle cx="218" cy="208" r="48" fill="url(#accent)" opacity="0.95"/>
+  <circle cx="304" cy="235" r="42" fill="url(#glow)" opacity="0.95"/>
+  <circle cx="240" cy="309" r="42" fill="#3b82f6" opacity="0.95"/>
+
+  <!-- Cutlery accents -->
+  <path d="M133 187 L133 325 M123 187 L144 187 M123 213 L144 213" stroke="#94a3b8" stroke-width="8" stroke-linecap="round"/>
+  <path d="M379 187 C389 187 395 203 395 224 C395 245 384 256 379 261 L379 325" stroke="#94a3b8" stroke-width="8" stroke-linecap="round"/>
+  
+  <!-- Notification alert badge -->
+  <circle cx="373" cy="139" r="27" fill="#ef4444"/>
+  <circle cx="373" cy="139" r="13" fill="#ffffff"/>
+</svg>

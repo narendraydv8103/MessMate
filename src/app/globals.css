@@ -1,0 +1,385 @@
+/* MessMate Global Styles & Design System */
+:root {
+  --bg-primary: #090d16;
+  --bg-card: rgba(19, 28, 46, 0.85);
+  --bg-card-hover: rgba(30, 41, 64, 0.9);
+  --bg-input: #162032;
+  
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-active: rgba(255, 255, 255, 0.16);
+  
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  
+  /* Status Colors */
+  --green-primary: #10b981;
+  --green-hover: #059669;
+  --green-bg: rgba(16, 185, 129, 0.15);
+  --green-border: rgba(16, 185, 129, 0.35);
+
+  --red-primary: #ef4444;
+  --red-hover: #dc2626;
+  --red-bg: rgba(239, 68, 68, 0.15);
+  --red-border: rgba(239, 68, 68, 0.35);
+
+  --amber-primary: #f59e0b;
+  --amber-bg: rgba(245, 158, 11, 0.15);
+  --amber-border: rgba(245, 158, 11, 0.35);
+
+  --blue-primary: #3b82f6;
+  --blue-bg: rgba(59, 130, 246, 0.15);
+  --blue-border: rgba(59, 130, 246, 0.35);
+
+  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans Devanagari', 'Inter', sans-serif;
+  
+  --safe-bottom: env(safe-area-inset-bottom, 16px);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  width: 100%;
+  min-height: 100%;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* App container constrained to mobile phone width on desktop */
+.app-container {
+  width: 100%;
+  max-width: 480px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background-color: var(--bg-primary);
+  padding-bottom: calc(72px + var(--safe-bottom));
+}
+
+/* Typography */
+h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+p {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* Glassmorphic Cards */
+.card {
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+/* Tap Target Buttons */
+button, .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-family);
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 14px;
+  border: none;
+  cursor: pointer;
+  min-height: 52px;
+  padding: 12px 20px;
+  transition: all 0.15s ease-in-out;
+  text-decoration: none;
+  user-select: none;
+}
+
+button:active, .btn:active {
+  transform: scale(0.98);
+}
+
+button:disabled, .btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Decision Action Buttons */
+.btn-jaayenge {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35);
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.btn-jaayenge:hover:not(:disabled) {
+  background: linear-gradient(135deg, #34d399 0%, #059669 100%);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+}
+
+.btn-nahi {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.35);
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.btn-nahi:hover:not(:disabled) {
+  background: linear-gradient(135deg, #f87171 0%, #dc2626 100%);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.5);
+}
+
+.btn-secondary {
+  background: #1e293b;
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+}
+.btn-secondary:hover:not(:disabled) {
+  background: #334155;
+}
+
+.btn-call {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+}
+
+.btn-whatsapp {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 4px 14px rgba(34, 197, 94, 0.35);
+}
+
+.btn-informed {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+}
+
+/* Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  font-size: 0.825rem;
+  font-weight: 600;
+}
+
+.badge-green {
+  background-color: var(--green-bg);
+  color: #34d399;
+  border: 1px solid var(--green-border);
+}
+
+.badge-red {
+  background-color: var(--red-bg);
+  color: #f87171;
+  border: 1px solid var(--red-border);
+}
+
+.badge-amber {
+  background-color: var(--amber-bg);
+  color: #fbbf24;
+  border: 1px solid var(--amber-border);
+}
+
+.badge-blue {
+  background-color: var(--blue-bg);
+  color: #60a5fa;
+  border: 1px solid var(--blue-border);
+}
+
+.badge-muted {
+  background-color: rgba(148, 163, 184, 0.12);
+  color: #94a3b8;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.badge-missed {
+  background-color: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  font-weight: 700;
+}
+
+/* Bottom Tab Navigation Bar */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  background: rgba(15, 23, 42, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 8px 12px calc(8px + var(--safe-bottom));
+  z-index: 50;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 6px 14px;
+  border-radius: 12px;
+  transition: color 0.15s ease;
+  min-height: 48px;
+}
+
+.nav-item.active {
+  color: var(--green-primary);
+  font-weight: 600;
+}
+
+.nav-item svg {
+  width: 22px;
+  height: 22px;
+}
+
+/* Modals & Dialogs */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 100;
+}
+
+.modal-content {
+  background: #1e293b;
+  border: 1px solid var(--border-active);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 400px;
+  padding: 24px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+  animation: modalIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Form Inputs */
+.input-field {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 14px 16px;
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-family: var(--font-family);
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.input-field:focus {
+  border-color: var(--green-primary);
+}
+
+.input-field::placeholder {
+  color: var(--text-muted);
+}
+
+/* Alerts and Banners */
+.banner {
+  padding: 10px 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+  z-index: 40;
+}
+
+.banner-stale {
+  background-color: #f59e0b;
+  color: #000000;
+}
+
+.banner-offline {
+  background-color: #ef4444;
+  color: #ffffff;
+}
+
+/* Countdown Display */
+.countdown-container {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.countdown-digits {
+  font-size: 2rem;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+}
+
+.countdown-label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}

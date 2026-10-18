@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgMask" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="accentMask" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+    <linearGradient id="glowMask" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+  </defs>
+  <!-- Full bleed background for maskable circle/squircle clipping -->
+  <rect width="512" height="512" fill="url(#bgMask)"/>
+  
+  <!-- Safe zone inner elements (centered within 80% safe area) -->
+  <circle cx="256" cy="256" r="140" fill="#1e293b" stroke="#475569" stroke-width="8"/>
+  <circle cx="256" cy="256" r="118" fill="#0f172a" stroke="#334155" stroke-width="4"/>
+
+  <!-- Mess Tiffin Katori Bowls -->
+  <circle cx="225" cy="217" r="39" fill="url(#accentMask)" opacity="0.95"/>
+  <circle cx="295" cy="239" r="34" fill="url(#glowMask)" opacity="0.95"/>
+  <circle cx="243" cy="299" r="34" fill="#3b82f6" opacity="0.95"/>
+
+  <!-- Cutlery accents -->
+  <path d="M155 200 L155 312 M147 200 L164 200 M147 221 L164 221" stroke="#94a3b8" stroke-width="6" stroke-linecap="round"/>
+  <path d="M356 200 C364 200 369 213 369 230 C369 247 360 256 356 260 L356 312" stroke="#94a3b8" stroke-width="6" stroke-linecap="round"/>
+  
+  <!-- Notification alert badge -->
+  <circle cx="340" cy="160" r="20" fill="#ef4444"/>
+  <circle cx="340" cy="160" r="10" fill="#ffffff"/>
+</svg>

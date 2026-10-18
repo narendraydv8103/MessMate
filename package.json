@@ -6,19 +6,38 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:seed": "tsx scripts/seed.ts",
+    "tick:local": "tsx scripts/tick.ts",
+    "vapid:generate": "tsx scripts/generate-vapid.ts"
   },
   "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "luxon": "^3.7.2",
     "next": "16.4.2",
+    "pg": "^8.23.1",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "web-push": "^3.6.7"
   },
   "devDependencies": {
-    "@types/node": "^20",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/react": "^16.3.3",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/luxon": "^3.7.6",
+    "@types/node": "^22.20.5",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/web-push": "^3.6.4",
+    "@vitejs/plugin-react": "^6.1.2",
     "eslint": "^9",
     "eslint-config-next": "16.4.2",
-    "typescript": "^5"
+    "jsdom": "^30.1.3",
+    "tsx": "^4.23.15",
+    "typescript": "^5",
+    "vitest": "^5.0.5"
   }
 }
