@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import ActionRequiredPanel from '@/components/ActionRequiredPanel';
 import OfflineBanner from '@/components/OfflineBanner';
@@ -16,11 +16,12 @@ import PhotoCropModal from '@/components/PhotoCropModal';
 // Mock next/navigation
 const mockPush = vi.fn();
 const mockRefresh = vi.fn();
+const mockRouter = {
+  push: mockPush,
+  refresh: mockRefresh,
+};
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({
-    push: mockPush,
-    refresh: mockRefresh,
-  }),
+  useRouter: () => mockRouter,
   usePathname: () => '/',
 }));
 
@@ -774,6 +775,155 @@ describe('Frontend Component Tests', () => {
       expect(otherNick.tagName).not.toBe('INPUT');
       expect(otherNick.textContent).toBe('Mahendra Singh Yadav');
       expect(screen.queryByTestId('editable-nickname-m2')).toBeNull();
+    });
+  });
+
+  describe('HistoryPage Change Timeline & Expand/Collapse', () => {
+    const mockHistoryItem = {
+      date: '2026-10-18',
+      mealPeriod: 'DINNER',
+      decision: 'NAHI_JAAYENGE',
+      submittedByName: 'Neeraj Yadav',
+      submittedByMember: {
+        id: 'm-neeraj',
+        name: 'Neeraj Yadav',
+        avatarColor: '#8b5cf6',
+      },
+      submittedAt: '2026-10-18T15:42:00.000Z',
+      scheduledFor: '2026-10-18T16:00:00.000Z',
+      callJobStatus: 'MESS_INFORMED',
+      statusLabel: 'Mishra Tiffin Centre Informed',
+      informedByName: 'Neeraj Yadav',
+      informedByMember: {
+        id: 'm-neeraj',
+        name: 'Neeraj Yadav',
+        avatarColor: '#8b5cf6',
+      },
+      informedAt: '2026-10-18T16:05:00.000Z', // 9:35 PM IST
+    };
+
+    const mockDecisionChanges = [
+      {
+        seq: 1,
+        id: 'dec-1',
+        memberId: 'm-devansh',
+        memberName: 'Devansh Tiwari',
+        avatarColor: '#ec4899',
+        decision: 'JAAYENGE',
+        createdAt: '2026-10-18T15:40:00.000Z', // 9:10 PM IST
+        mealDate: '2026-10-18',
+        mealPeriod: 'DINNER',
+        isFinal: false,
+      },
+      {
+        seq: 2,
+        id: 'dec-2',
+        memberId: 'm-neeraj',
+        memberName: 'Neeraj Yadav',
+        avatarColor: '#8b5cf6',
+        decision: 'NAHI_JAAYENGE',
+        createdAt: '2026-10-18T15:42:00.000Z', // 9:12 PM IST
+        mealDate: '2026-10-18',
+        mealPeriod: 'DINNER',
+        isFinal: true,
+      },
+    ];
+
+    it('renders collapsed row with final decision and expands timeline on View changes', async () => {
+      vi.mocked(fetch).mockImplementation(async (url) => {
+        const urlStr = url.toString();
+        if (urlStr.includes('/api/decisions/history')) {
+          return {
+            status: 200,
+            ok: true,
+            json: async () => ({
+              history: mockDecisionChanges,
+              decisions: mockDecisionChanges,
+            }),
+          } as Response;
+        }
+        if (urlStr.includes('/api/history')) {
+          return {
+            status: 200,
+            ok: true,
+            json: async () => ({
+              history: [mockHistoryItem],
+            }),
+          } as Response;
+        }
+        return {
+          status: 200,
+          ok: true,
+          json: async () => ({}),
+        } as Response;
+      });
+
+      render(<HistoryPage />);
+
+      // Wait for history to load
+      await waitFor(() => {
+        expect(screen.queryByText('Loading history...')).toBeNull();
+        expect(screen.getByText('2026-10-18')).toBeTruthy();
+      });
+
+      // 1. Collapsed row displays final decision and who decided
+      expect(screen.getByText('NAHI JAAYENGE')).toBeTruthy();
+      expect(screen.getByText(/Decided by Neeraj Yadav/i)).toBeTruthy();
+
+      // Timeline is NOT expanded initially
+      expect(screen.queryByTestId('timeline-2026-10-18-DINNER')).toBeNull();
+
+      // 2. Click "View changes" button to expand
+      const toggleBtn = screen.getByTestId('toggle-changes-2026-10-18-DINNER');
+      expect(toggleBtn.textContent).toContain('View changes');
+      await act(async () => {
+        fireEvent.click(toggleBtn);
+      });
+
+      // 3. Timeline is now expanded
+      expect(screen.getByTestId('timeline-2026-10-18-DINNER')).toBeTruthy();
+      expect(toggleBtn.textContent).toContain('Hide changes');
+
+      // Check first change: "Devansh Tiwari chose JAAYENGE at 9:10 PM"
+      const item1 = screen.getByTestId('timeline-item-1');
+      expect(item1.textContent).toContain('Devansh Tiwari');
+      expect(item1.textContent).toContain('chose JAAYENGE at 9:10 PM');
+
+      // Check second change: "Neeraj Yadav chose NAHI JAAYENGE at 9:12 PM"
+      const item2 = screen.getByTestId('timeline-item-2');
+      expect(item2.textContent).toContain('Neeraj Yadav');
+      expect(item2.textContent).toContain('chose NAHI JAAYENGE at 9:12 PM');
+
+      // Check "Final" marker on the last decision
+      const finalMarker = screen.getByTestId('final-marker');
+      expect(finalMarker).toBeTruthy();
+      expect(finalMarker.textContent).toBe('Final');
+
+      // Check Mishra Tiffin Centre informed event at the end
+      const informedEvent = screen.getByTestId('informed-timeline-event-2026-10-18-DINNER');
+      expect(informedEvent).toBeTruthy();
+      expect(informedEvent.textContent).toContain('Mishra Tiffin Centre informed by Neeraj Yadav at 9:35 PM');
+
+      // 4. Click "Hide changes" to collapse
+      await act(async () => {
+        fireEvent.click(toggleBtn);
+      });
+      expect(screen.queryByTestId('timeline-2026-10-18-DINNER')).toBeNull();
+      expect(toggleBtn.textContent).toContain('View changes');
+    });
+
+    it('shows clear error state when history fetch fails', async () => {
+      vi.mocked(fetch).mockResolvedValueOnce({
+        status: 500,
+        ok: false,
+        json: async () => ({ error: 'Database unavailable' }),
+      } as Response);
+
+      render(<HistoryPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Failed to load history/i)).toBeTruthy();
+      });
     });
   });
 });
