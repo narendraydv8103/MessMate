@@ -107,6 +107,12 @@ export async function POST(request: Request) {
     return response;
   } catch (error) {
     console.error('Error during login:', error);
+    if (error instanceof Error && error.message.includes('SESSION_SECRET')) {
+      return NextResponse.json(
+        { error: 'Server configuration error: SESSION_SECRET is missing or under 32 characters in Vercel Environment Variables.' },
+        { status: 500 }
+      );
+    }
     return NextResponse.json(
       { error: 'An unexpected error occurred during login.' },
       { status: 500 }
