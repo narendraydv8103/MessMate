@@ -70,10 +70,11 @@ export default function SettingsPage() {
         const userAgent = window.navigator.userAgent.toLowerCase();
         setIsIosDevice(/iphone|ipad|ipod/.test(userAgent));
         const standalone =
-          window.matchMedia('(display-mode: standalone)').matches ||
+          (typeof window.matchMedia === 'function' &&
+            window.matchMedia('(display-mode: standalone)').matches) ||
           ('standalone' in window.navigator &&
             (window.navigator as unknown as { standalone: boolean }).standalone === true);
-        setIsStandalone(standalone);
+        setIsStandalone(Boolean(standalone));
 
         const supported = isPushSupported();
         setPushSupported(supported);
@@ -258,6 +259,10 @@ export default function SettingsPage() {
         setMessage({ text: 'Web push notifications enabled successfully on this device.', type: 'success' });
         // Refresh subscription count
         const refreshRes = await fetch('/api/settings');
+        if (refreshRes.status === 401) {
+          router.push('/login');
+          return;
+        }
         if (refreshRes.ok) {
           const freshData = await refreshRes.json();
           setData(freshData);
@@ -276,6 +281,10 @@ export default function SettingsPage() {
     setTestResult(null);
     try {
       const res = await fetch('/api/push/test', { method: 'POST' });
+      if (res.status === 401) {
+        router.push('/login');
+        return;
+      }
       const resJson = await res.json().catch(() => ({}));
 
       if (res.status === 429) {

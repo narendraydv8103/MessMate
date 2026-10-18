@@ -18,8 +18,10 @@ export async function GET(request: Request) {
       group_name: string;
       mess_name: string;
       mess_phone: string;
+      photo_mime: string | null;
+      photo_updated_at: Date | null;
     }>(
-      `SELECT m.id, m.name, m.avatar_color, g.id as group_id, g.name as group_name, g.mess_name, g.mess_phone
+      `SELECT m.id, m.name, m.avatar_color, m.photo_mime, m.photo_updated_at, g.id as group_id, g.name as group_name, g.mess_name, g.mess_phone
        FROM members m
        JOIN groups g ON m.group_id = g.id
        WHERE m.id = $1`,
@@ -44,6 +46,8 @@ export async function GET(request: Request) {
         name: row.name,
         avatarColor: row.avatar_color,
         groupId: row.group_id,
+        hasPhoto: Boolean(row.photo_mime),
+        photoVersion: row.photo_updated_at ? new Date(row.photo_updated_at).getTime() : null,
       },
       group: {
         id: row.group_id,

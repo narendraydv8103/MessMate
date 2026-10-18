@@ -10,6 +10,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "seed": "npm run db:seed",
+    "db:migrate": "tsx scripts/migrate.ts",
     "db:seed": "tsx scripts/seed.ts",
     "tick:local": "tsx scripts/tick.ts",
     "vapid:generate": "tsx scripts/generate-vapid.ts"

@@ -27,6 +27,9 @@ CREATE TABLE IF NOT EXISTS members (
     name VARCHAR(100) NOT NULL,
     avatar_color VARCHAR(20) NOT NULL DEFAULT '#3b82f6',
     notification_preferences JSONB NOT NULL DEFAULT '{"push_enabled": true, "reminders": true}'::jsonb,
+    photo_data BYTEA NULL,
+    photo_mime VARCHAR(20) NULL,
+    photo_updated_at TIMESTAMPTZ NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

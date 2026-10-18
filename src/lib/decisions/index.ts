@@ -291,6 +291,60 @@ export async function getCurrentMealStatus(groupId: string, clock: Clock = new S
     }
   }
 
+  // 7. Query group members with photo metadata
+  let groupMembers: Array<{
+    id: string;
+    name: string;
+    avatarColor: string;
+    hasPhoto: boolean;
+    photoVersion: number | null;
+  }> = [];
+
+  try {
+    const membersRes = await query<{
+      id: string;
+      name: string;
+      avatar_color: string;
+      photo_mime: string | null;
+      photo_updated_at: Date | null;
+    }>(
+      'SELECT id, name, avatar_color, photo_mime, photo_updated_at FROM members WHERE group_id = $1 ORDER BY name ASC',
+      [groupId]
+    );
+    groupMembers = membersRes.rows.map((m) => ({
+      id: m.id,
+      name: m.name,
+      avatarColor: m.avatar_color,
+      hasPhoto: Boolean(m.photo_mime),
+      photoVersion: m.photo_updated_at ? new Date(m.photo_updated_at).getTime() : null,
+    }));
+  } catch {
+    groupMembers = [];
+  }
+
+  const submittedByMember = latestDecision?.submittedByMemberId
+    ? groupMembers.find((m) => m.id === latestDecision.submittedByMemberId) || {
+        id: latestDecision.submittedByMemberId,
+        name: latestDecision.submittedByName,
+        avatarColor: '#3b82f6',
+        hasPhoto: false,
+        photoVersion: null,
+      }
+    : null;
+
+  const informedByMember = callJob?.informedByMemberId
+    ? groupMembers.find((m) => m.id === callJob.informedByMemberId) ||
+      (callJob.informedByName
+        ? {
+            id: callJob.informedByMemberId,
+            name: callJob.informedByName,
+            avatarColor: '#10b981',
+            hasPhoto: false,
+            photoVersion: null,
+          }
+        : null)
+    : null;
+
   const statusLabel = mapStatusLabel(
     latestDecision?.decision || null,
     callJob?.status || null,
@@ -312,6 +366,7 @@ export async function getCurrentMealStatus(groupId: string, clock: Clock = new S
     isBeforeDeadline: beforeDeadline,
     decision: latestDecision?.decision || null,
     submittedBy: latestDecision?.submittedByName || null,
+    submittedByMember,
     submittedAt: latestDecision?.createdAt?.toISOString() || null,
     notes: latestDecision?.notes || null,
     callJobStatus: callJob?.status || null,
@@ -322,12 +377,14 @@ export async function getCurrentMealStatus(groupId: string, clock: Clock = new S
     telUrl: `tel:${cleanPhone}`,
     actionRequiredAt: callJob?.actionRequiredAt ? callJob.actionRequiredAt.toISOString() : null,
     informedBy: callJob?.informedByName || null,
+    informedByMember,
     informedAt: callJob?.informedAt ? callJob.informedAt.toISOString() : null,
     lastTickAt: lastTickAt?.toISOString() || null,
     isSchedulerStale,
     hasGroupSubscriptions,
     groupSubscriptionCount,
     urgentPushFailed,
+    members: groupMembers,
   };
 }
 

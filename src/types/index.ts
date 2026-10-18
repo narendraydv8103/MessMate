@@ -48,6 +48,8 @@ export interface Member {
   avatarColor: string;
   notificationPreferences: MemberNotificationPreferences;
   createdAt: Date;
+  hasPhoto?: boolean;
+  photoVersion?: number | null;
 }
 
 export interface DecisionLogEntry {

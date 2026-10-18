@@ -2,23 +2,25 @@
 
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
+import Avatar, { AvatarMember } from '@/components/Avatar';
 
 interface TopAppBarProps {
   messName?: string;
   memberName?: string;
   avatarColor?: string;
+  member?: AvatarMember;
 }
 
 export default function TopAppBar({
   messName: propMessName,
   memberName: propMemberName,
   avatarColor: propAvatarColor,
+  member: propMember,
 }: TopAppBarProps) {
   const pathname = usePathname();
   const [fetchedData, setFetchedData] = useState<{
     messName?: string;
-    memberName?: string;
-    avatarColor?: string;
+    member?: AvatarMember;
   } | null>(null);
 
   // Hide top app bar on login screen
@@ -26,7 +28,7 @@ export default function TopAppBar({
 
   useEffect(() => {
     if (isLoginPage) return;
-    if (propMemberName) return;
+    if (propMemberName || propMember) return;
 
     let mounted = true;
     fetch('/api/auth/me')
@@ -34,8 +36,7 @@ export default function TopAppBar({
       .then((data) => {
         if (!mounted || !data) return;
         setFetchedData({
-          memberName: data.member?.name,
-          avatarColor: data.member?.avatarColor,
+          member: data.member,
           messName: data.group?.messName,
         });
       })
@@ -44,22 +45,18 @@ export default function TopAppBar({
     return () => {
       mounted = false;
     };
-  }, [isLoginPage, propMemberName]);
+  }, [isLoginPage, propMemberName, propMember]);
 
   if (isLoginPage) return null;
 
   const messName = propMessName || fetchedData?.messName || 'Mishra Tiffin Centre';
-  const memberName = propMemberName || fetchedData?.memberName || '';
-  const avatarColor = propAvatarColor || fetchedData?.avatarColor || '#1D4ED8';
+  const member: AvatarMember | undefined =
+    propMember ||
+    (propMemberName
+      ? { name: propMemberName, avatarColor: propAvatarColor }
+      : fetchedData?.member);
 
-  const initials = memberName
-    ? memberName
-        .split(' ')
-        .map((n) => n[0])
-        .slice(0, 2)
-        .join('')
-        .toUpperCase()
-    : '';
+  const memberName = member?.name || propMemberName || '';
 
   return (
     <header
@@ -114,24 +111,7 @@ export default function TopAppBar({
           >
             {memberName}
           </span>
-          <div
-            style={{
-              width: '32px',
-              height: '32px',
-              borderRadius: '50%',
-              backgroundColor: avatarColor || '#1D4ED8',
-              color: '#FFFFFF',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '12px',
-              fontWeight: 600,
-              flexShrink: 0,
-            }}
-            title={memberName}
-          >
-            {initials}
-          </div>
+          <Avatar member={member} size={32} />
         </div>
       )}
     </header>

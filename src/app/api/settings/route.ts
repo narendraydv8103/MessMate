@@ -31,7 +31,9 @@ export async function GET(request: Request) {
       name: string;
       avatar_color: string;
       notification_preferences: Record<string, unknown>;
-    }>('SELECT id, name, avatar_color, notification_preferences FROM members WHERE group_id = $1 ORDER BY name ASC', [
+      photo_mime: string | null;
+      photo_updated_at: Date | null;
+    }>('SELECT id, name, avatar_color, notification_preferences, photo_mime, photo_updated_at FROM members WHERE group_id = $1 ORDER BY name ASC', [
       session.groupId,
     ]);
 
@@ -70,6 +72,8 @@ export async function GET(request: Request) {
         name: m.name,
         avatarColor: m.avatar_color,
         notificationPreferences: m.notification_preferences,
+        hasPhoto: Boolean(m.photo_mime),
+        photoVersion: m.photo_updated_at ? new Date(m.photo_updated_at).getTime() : null,
       })),
       scheduler: {
         lastTickAt: lastTickAt?.toISOString() || null,

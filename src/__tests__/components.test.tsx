@@ -7,6 +7,10 @@ import ActionRequiredPanel from '@/components/ActionRequiredPanel';
 import OfflineBanner from '@/components/OfflineBanner';
 import CountdownTimer from '@/components/CountdownTimer';
 import HomePage from '@/app/page';
+import Avatar from '@/components/Avatar';
+import RoommatesPage from '@/app/roommates/page';
+import HistoryPage from '@/app/history/page';
+import SettingsPage from '@/app/settings/page';
 
 // Mock next/navigation
 const mockPush = vi.fn();
@@ -385,4 +389,120 @@ describe('Frontend Component Tests', () => {
       });
     });
   });
+
+  describe('Avatar Component', () => {
+    it('renders initials with avatarColor when hasPhoto is false or absent', () => {
+      render(
+        <Avatar
+          member={{
+            id: 'm1',
+            name: 'Sujeet Yadav',
+            avatarColor: '#3b82f6',
+            hasPhoto: false,
+          }}
+          size={40}
+        />
+      );
+
+      const initialsElement = screen.getByTestId('avatar-initials');
+      expect(initialsElement.textContent).toBe('SY');
+      expect(initialsElement.style.backgroundColor).toBe('rgb(59, 130, 246)');
+      expect(screen.queryByTestId('avatar-photo')).toBeNull();
+    });
+
+    it('renders img with correct src and alt when hasPhoto is true', () => {
+      render(
+        <Avatar
+          member={{
+            id: 'm-photo-1',
+            name: 'Sujeet Yadav',
+            avatarColor: '#3b82f6',
+            hasPhoto: true,
+            photoVersion: 1776518400000,
+          }}
+          size={48}
+        />
+      );
+
+      const imgElement = screen.getByTestId('avatar-photo') as HTMLImageElement;
+      expect(imgElement).toBeTruthy();
+      expect(imgElement.getAttribute('src')).toBe('/api/members/m-photo-1/photo?v=1776518400000');
+      expect(imgElement.getAttribute('alt')).toBe('Sujeet Yadav');
+      expect(imgElement.style.borderRadius).toBe('50%');
+      expect(imgElement.style.objectFit).toBe('cover');
+    });
+
+    it('falls back to initials on image load error', () => {
+      render(
+        <Avatar
+          member={{
+            id: 'm-photo-2',
+            name: 'Devansh Tiwari',
+            avatarColor: '#ec4899',
+            hasPhoto: true,
+            photoVersion: 9999,
+          }}
+          size={36}
+        />
+      );
+
+      // Initially renders img
+      const imgElement = screen.getByTestId('avatar-photo');
+      expect(imgElement).toBeTruthy();
+
+      // Trigger error on image
+      fireEvent.error(imgElement);
+
+      // Should now fall back to initials
+      expect(screen.queryByTestId('avatar-photo')).toBeNull();
+      const initialsElement = screen.getByTestId('avatar-initials');
+      expect(initialsElement.textContent).toBe('DT');
+      expect(initialsElement.style.backgroundColor).toBe('rgb(236, 72, 153)');
+    });
+  });
+
+  describe('401 Redirects across Pages', () => {
+    it('redirects RoommatesPage to /login when API returns 401', async () => {
+      vi.mocked(fetch).mockResolvedValue({
+        status: 401,
+        ok: false,
+        json: async () => ({ error: 'Unauthorized' }),
+      } as Response);
+
+      render(<RoommatesPage />);
+
+      await waitFor(() => {
+        expect(mockPush).toHaveBeenCalledWith('/login');
+      });
+    });
+
+    it('redirects HistoryPage to /login when /api/history returns 401', async () => {
+      vi.mocked(fetch).mockResolvedValue({
+        status: 401,
+        ok: false,
+        json: async () => ({ error: 'Unauthorized' }),
+      } as Response);
+
+      render(<HistoryPage />);
+
+      await waitFor(() => {
+        expect(mockPush).toHaveBeenCalledWith('/login');
+      });
+    });
+
+    it('redirects SettingsPage to /login when /api/settings returns 401', async () => {
+      vi.mocked(fetch).mockResolvedValue({
+        status: 401,
+        ok: false,
+        json: async () => ({ error: 'Unauthorized' }),
+      } as Response);
+
+      render(<SettingsPage />);
+
+      await waitFor(() => {
+        expect(mockPush).toHaveBeenCalledWith('/login');
+      });
+    });
+  });
 });
+

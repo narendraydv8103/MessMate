@@ -10,6 +10,7 @@ import SchedulerStaleBanner from '@/components/SchedulerStaleBanner';
 
 import { useIsOffline } from '@/lib/hooks/useIsOffline';
 import { isPushSupported } from '@/lib/push/client';
+import Avatar, { AvatarMember } from '@/components/Avatar';
 
 interface MealStatusResponse {
   messName?: string;
@@ -21,6 +22,7 @@ interface MealStatusResponse {
   isBeforeDeadline: boolean;
   decision: 'JAAYENGE' | 'NAHI_JAAYENGE' | null;
   submittedBy: string | null;
+  submittedByMember?: AvatarMember | null;
   submittedAt: string | null;
   notes?: string | null;
   callJobStatus: string | null;
@@ -31,12 +33,14 @@ interface MealStatusResponse {
   telUrl: string;
   actionRequiredAt?: string | null;
   informedBy?: string | null;
+  informedByMember?: AvatarMember | null;
   informedAt?: string | null;
   lastTickAt?: string | null;
   isSchedulerStale: boolean;
   hasGroupSubscriptions?: boolean;
   groupSubscriptionCount?: number;
   urgentPushFailed?: boolean;
+  members?: AvatarMember[];
 }
 
 export default function HomePage() {
@@ -431,9 +435,19 @@ export default function HomePage() {
           </span>
         </div>
         {status?.submittedBy && (
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-            Submitted by <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{status.submittedBy}</span>{' '}
-            {status.submittedAt ? `at ${new Date(status.submittedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+            <Avatar
+              member={
+                status.submittedByMember || {
+                  name: status.submittedBy,
+                }
+              }
+              size={24}
+            />
+            <div>
+              Submitted by <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{status.submittedBy}</span>{' '}
+              {status.submittedAt ? `at ${new Date(status.submittedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}
+            </div>
           </div>
         )}
       </div>

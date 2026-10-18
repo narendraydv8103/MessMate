@@ -3,17 +3,20 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import BottomNav from '@/components/BottomNav';
+import Avatar, { AvatarMember } from '@/components/Avatar';
 
 interface HistoryItem {
   date: string;
   mealPeriod: 'DINNER' | 'LUNCH';
   decision: 'JAAYENGE' | 'NAHI_JAAYENGE' | null;
   submittedByName: string | null;
+  submittedByMember?: AvatarMember | null;
   submittedAt: string | null;
   scheduledFor: string | null;
   callJobStatus: string | null;
   statusLabel: string;
   informedByName?: string | null;
+  informedByMember?: AvatarMember | null;
   informedAt?: string | null;
 }
 
@@ -111,18 +114,32 @@ export default function HistoryPage() {
                 </span>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                <span>
-                  {item.submittedByName ? `Decided by ${item.submittedByName}` : 'Auto-evaluated'}
-                </span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  {item.submittedByName && (
+                    <Avatar
+                      member={item.submittedByMember || { name: item.submittedByName }}
+                      size={20}
+                    />
+                  )}
+                  <span>
+                    {item.submittedByName ? `Decided by ${item.submittedByName}` : 'Auto-evaluated'}
+                  </span>
+                </div>
                 <span>
                   {item.scheduledFor ? `Scheduled: ${new Date(item.scheduledFor).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}
                 </span>
               </div>
 
               {item.informedByName && (
-                <div style={{ fontSize: '0.75rem', color: 'var(--success)', backgroundColor: 'var(--success-bg)', padding: '4px 8px', borderRadius: '6px' }}>
-                  Informed by {item.informedByName} {item.informedAt ? `(${new Date(item.informedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})` : ''}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: 'var(--success)', backgroundColor: 'var(--success-bg)', padding: '4px 8px', borderRadius: '6px' }}>
+                  <Avatar
+                    member={item.informedByMember || { name: item.informedByName }}
+                    size={18}
+                  />
+                  <span>
+                    Informed by {item.informedByName} {item.informedAt ? `(${new Date(item.informedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})` : ''}
+                  </span>
                 </div>
               )}
             </div>

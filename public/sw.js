@@ -45,9 +45,9 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // CRITICAL RULE: NEVER CACHE /api/* OR /_next/data/*
+  // CRITICAL RULE: NEVER CACHE /api/* OR /_next/data/* IN SERVICE WORKER
+  // Let browser network stack handle directly so browser HTTP cache via ?v= functions
   if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/_next/data') || url.pathname.includes('/_next/data')) {
-    event.respondWith(fetch(event.request, { cache: 'no-store' }));
     return;
   }
 
