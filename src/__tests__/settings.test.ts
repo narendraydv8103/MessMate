@@ -1,8 +1,12 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET as settingsGet, POST as settingsPost } from '@/app/api/settings/route';
 import { signSession, SESSION_COOKIE_NAME } from '@/lib/auth/session';
+import * as dbModule from '@/lib/db';
 
 describe('/api/settings Unit & Validation Tests', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
   it('GET /api/settings rejects without session cookie with 401', async () => {
     const req = new Request('http://localhost:3000/api/settings', {
       method: 'GET',
@@ -209,5 +213,146 @@ describe('/api/settings Unit & Validation Tests', () => {
     const res = await settingsPost(req);
     // Since mock db is not connected, it will either throw 500 or proceed past validation; but it MUST NOT return 400 validation error
     expect(res.status).not.toBe(400);
+  });
+
+  describe('Self-Only Nickname Editing & Integrity (403)', () => {
+    it('returns 403 when member A tries to change member B nickname and changes nothing', async () => {
+      const tokenA = signSession({
+        memberId: 'm1',
+        groupId: 'g1',
+        memberName: 'Sujeet Yadav',
+      });
+
+      // Mock database returning current group members
+      vi.spyOn(dbModule, 'query').mockResolvedValueOnce({
+        rows: [
+          { id: 'm1', name: 'Sujeet Yadav', notification_preferences: {} },
+          { id: 'm2', name: 'Mahendra Singh Yadav', notification_preferences: {} },
+        ],
+        command: 'SELECT',
+        rowCount: 2,
+        oid: 0,
+        fields: [],
+      });
+
+      const withTransactionSpy = vi.spyOn(dbModule, 'withTransaction');
+
+      const req = new Request('http://localhost:3000/api/settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          cookie: `${SESSION_COOKIE_NAME}=${tokenA}`,
+        },
+        body: JSON.stringify({
+          messName: 'New Mess Name',
+          members: [
+            { id: 'm1', name: 'Sujeet' },
+            { id: 'm2', name: 'HackedNickname' }, // Attempting to change m2!
+          ],
+        }),
+      });
+
+      const res = await settingsPost(req);
+      expect(res.status).toBe(403);
+      const body = await res.json();
+      expect(body.error).toBe('Forbidden: you can only change your own nickname.');
+
+      // Verify transaction was never invoked -> nothing changed in database!
+      expect(withTransactionSpy).not.toHaveBeenCalled();
+    });
+
+    it('succeeds when member A changes only their own nickname', async () => {
+      const tokenA = signSession({
+        memberId: 'm1',
+        groupId: 'g1',
+        memberName: 'Sujeet Yadav',
+      });
+
+      // Mock database returning current group members
+      vi.spyOn(dbModule, 'query').mockResolvedValueOnce({
+        rows: [
+          { id: 'm1', name: 'Sujeet Yadav', notification_preferences: {} },
+          { id: 'm2', name: 'Mahendra Singh Yadav', notification_preferences: {} },
+        ],
+        command: 'SELECT',
+        rowCount: 2,
+        oid: 0,
+        fields: [],
+      });
+
+      const mockClient = {
+        query: vi.fn().mockResolvedValue({ rowCount: 1, rows: [] }),
+      };
+
+      vi.spyOn(dbModule, 'withTransaction').mockImplementation(async (callback) => {
+        return callback(mockClient as unknown as Parameters<typeof callback>[0]);
+      });
+
+      const req = new Request('http://localhost:3000/api/settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          cookie: `${SESSION_COOKIE_NAME}=${tokenA}`,
+        },
+        body: JSON.stringify({
+          members: [
+            { id: 'm1', name: 'Sujeet Boss' },
+            { id: 'm2', name: 'Mahendra Singh Yadav' }, // Unchanged for m2
+          ],
+        }),
+      });
+
+      const res = await settingsPost(req);
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body.success).toBe(true);
+
+      // Verify only m1 was updated
+      expect(mockClient.query).toHaveBeenCalledWith(
+        'UPDATE members SET name = $1 WHERE id = $2 AND group_id = $3',
+        ['Sujeet Boss', 'm1', 'g1']
+      );
+    });
+
+    it('rejects duplicate nickname matching another roommate in group with 400', async () => {
+      const tokenA = signSession({
+        memberId: 'm1',
+        groupId: 'g1',
+        memberName: 'Sujeet Yadav',
+      });
+
+      // Mock database returning current group members
+      vi.spyOn(dbModule, 'query').mockResolvedValueOnce({
+        rows: [
+          { id: 'm1', name: 'Sujeet Yadav', notification_preferences: {} },
+          { id: 'm2', name: 'Mahendra Singh Yadav', notification_preferences: {} },
+        ],
+        command: 'SELECT',
+        rowCount: 2,
+        oid: 0,
+        fields: [],
+      });
+
+      const withTransactionSpy = vi.spyOn(dbModule, 'withTransaction');
+
+      const req = new Request('http://localhost:3000/api/settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          cookie: `${SESSION_COOKIE_NAME}=${tokenA}`,
+        },
+        body: JSON.stringify({
+          members: [
+            { id: 'm1', name: 'mahendra singh yadav' }, // Matches m2 case-insensitively!
+          ],
+        }),
+      });
+
+      const res = await settingsPost(req);
+      expect(res.status).toBe(400);
+      const body = await res.json();
+      expect(body.error).toContain('unique');
+      expect(withTransactionSpy).not.toHaveBeenCalled();
+    });
   });
 });

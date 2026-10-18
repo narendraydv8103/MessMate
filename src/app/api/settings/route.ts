@@ -75,6 +75,7 @@ export async function GET(request: Request) {
         hasPhoto: Boolean(m.photo_mime),
         photoVersion: m.photo_updated_at ? new Date(m.photo_updated_at).getTime() : null,
       })),
+      currentMemberId: session.memberId,
       scheduler: {
         lastTickAt: lastTickAt?.toISOString() || null,
         isSchedulerStale,
@@ -98,7 +99,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { messPhone, messName, members } = body;
+    const { messPhone, messName, members, notificationPreferences } = body;
     const phoneToUpdate = messPhone;
 
     // Validate mess name if provided
@@ -124,13 +125,27 @@ export async function POST(request: Request) {
       }
     }
 
-    // Validate members if provided
+    // Validate notificationPreferences if provided
+    if (notificationPreferences !== undefined) {
+      if (
+        typeof notificationPreferences !== 'object' ||
+        notificationPreferences === null ||
+        Array.isArray(notificationPreferences)
+      ) {
+        return NextResponse.json(
+          { error: 'notificationPreferences must be an object.' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Validate members structural rules if provided
     if (members !== undefined) {
       if (!Array.isArray(members)) {
         return NextResponse.json({ error: 'members must be an array.' }, { status: 400 });
       }
 
-      // Check nickname lengths (1 to 20 chars) and uniqueness within group
+      // Check nickname lengths (1 to 20 chars) and uniqueness within submitted list
       const seenNames = new Set<string>();
       for (const m of members) {
         if (!m || typeof m.id !== 'string') continue;
@@ -154,6 +169,62 @@ export async function POST(request: Request) {
         }
         seenNames.add(normalized);
       }
+
+      // Fetch existing members in the group to verify self-only editing and uniqueness against others
+      const existingRes = await query<{
+        id: string;
+        name: string;
+        notification_preferences: Record<string, unknown> | null;
+      }>('SELECT id, name, notification_preferences FROM members WHERE group_id = $1', [
+        session.groupId,
+      ]);
+
+      const existingMap = new Map(existingRes.rows.map((row) => [row.id, row]));
+
+      for (const m of members) {
+        if (!m || typeof m.id !== 'string') continue;
+        const existing = existingMap.get(m.id);
+        if (!existing) {
+          return NextResponse.json({ error: 'Member not found in group.' }, { status: 404 });
+        }
+
+        // Enforce self-only nickname edit:
+        // If request tries to change another member's nickname, return 403 and change nothing
+        if (m.id !== session.memberId && m.name.trim() !== existing.name) {
+          return NextResponse.json(
+            { error: 'Forbidden: you can only change your own nickname.' },
+            { status: 403 }
+          );
+        }
+
+        // Notification preferences can only change member's own
+        if (m.id !== session.memberId && m.notificationPreferences !== undefined) {
+          const currentPrefStr = JSON.stringify(existing.notification_preferences || {});
+          const submittedPrefStr = JSON.stringify(m.notificationPreferences);
+          if (currentPrefStr !== submittedPrefStr) {
+            return NextResponse.json(
+              { error: 'Forbidden: you can only change your own notification preferences.' },
+              { status: 403 }
+            );
+          }
+        }
+      }
+
+      // Validate that own new nickname is unique against all other group members in DB
+      const ownEntry = members.find((m) => m.id === session.memberId);
+      if (ownEntry && typeof ownEntry.name === 'string') {
+        const ownNewNameLower = ownEntry.name.trim().toLowerCase();
+        for (const [otherId, otherMember] of existingMap.entries()) {
+          if (otherId !== session.memberId && otherMember.name.toLowerCase() === ownNewNameLower) {
+            return NextResponse.json(
+              {
+                error: `Roommate nicknames must be unique within the group. Duplicate found: "${ownEntry.name.trim()}".`,
+              },
+              { status: 400 }
+            );
+          }
+        }
+      }
     }
 
     await withTransaction(async (client) => {
@@ -173,15 +244,30 @@ export async function POST(request: Request) {
         ]);
       }
 
-      // 3. Update member nicknames if provided
+      // 3. Update member's own nickname if provided
       if (Array.isArray(members)) {
-        for (const m of members) {
-          if (m.id && typeof m.name === 'string') {
-            await client.query(
-              'UPDATE members SET name = $1 WHERE id = $2 AND group_id = $3',
-              [m.name.trim(), m.id, session.groupId]
-            );
-          }
+        const ownMember = members.find((m) => m.id === session.memberId);
+        if (ownMember && typeof ownMember.name === 'string') {
+          await client.query(
+            'UPDATE members SET name = $1 WHERE id = $2 AND group_id = $3',
+            [ownMember.name.trim(), session.memberId, session.groupId]
+          );
+        }
+      }
+
+      // 4. Update member's own notification preferences if provided
+      if (notificationPreferences !== undefined) {
+        await client.query(
+          'UPDATE members SET notification_preferences = $1 WHERE id = $2 AND group_id = $3',
+          [JSON.stringify(notificationPreferences), session.memberId, session.groupId]
+        );
+      } else if (Array.isArray(members)) {
+        const ownMember = members.find((m) => m.id === session.memberId);
+        if (ownMember && ownMember.notificationPreferences !== undefined) {
+          await client.query(
+            'UPDATE members SET notification_preferences = $1 WHERE id = $2 AND group_id = $3',
+            [JSON.stringify(ownMember.notificationPreferences), session.memberId, session.groupId]
+          );
         }
       }
     });

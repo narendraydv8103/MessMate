@@ -118,7 +118,15 @@ export async function PUT(request: Request, context: RouteParams) {
   }
 
   try {
-    // 1. Verify target member exists in same group
+    // 1. Enforce self-only editing: members can only update their own profile photo
+    if (id !== session.memberId) {
+      return NextResponse.json(
+        { error: 'Forbidden: you can only update your own profile photo.' },
+        { status: 403 }
+      );
+    }
+
+    // 2. Verify target member exists in same group
     const memberResult = await query<{ id: string; group_id: string }>(
       'SELECT id, group_id FROM members WHERE id = $1',
       [id]
@@ -214,7 +222,15 @@ export async function DELETE(request: Request, context: RouteParams) {
   }
 
   try {
-    // 1. Verify target member exists in same group
+    // 1. Enforce self-only editing: members can only remove their own profile photo
+    if (id !== session.memberId) {
+      return NextResponse.json(
+        { error: 'Forbidden: you can only remove your own profile photo.' },
+        { status: 403 }
+      );
+    }
+
+    // 2. Verify target member exists in same group
     const memberResult = await query<{ id: string; group_id: string }>(
       'SELECT id, group_id FROM members WHERE id = $1',
       [id]

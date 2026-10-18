@@ -27,6 +27,7 @@ interface SettingsData {
     settings: Record<string, unknown>;
   };
   members: Member[];
+  currentMemberId?: string;
   scheduler: {
     lastTickAt: string | null;
     isSchedulerStale: boolean;
@@ -40,6 +41,7 @@ interface SettingsData {
 export default function SettingsPage() {
   const router = useRouter();
   const [data, setData] = useState<SettingsData | null>(null);
+  const [currentMemberId, setCurrentMemberId] = useState<string | null>(null);
   const [messPhone, setMessPhone] = useState('');
   const [messName, setMessName] = useState('');
   const [memberNames, setMemberNames] = useState<Record<string, string>>({});
@@ -102,6 +104,21 @@ export default function SettingsPage() {
 
         const json: SettingsData = await res.json();
         setData(json);
+        if (json.currentMemberId) {
+          setCurrentMemberId(json.currentMemberId);
+        } else {
+          try {
+            const meRes = await fetch('/api/auth/me');
+            if (meRes.ok) {
+              const meJson = await meRes.json();
+              if (meJson.member?.id) {
+                setCurrentMemberId(meJson.member.id);
+              }
+            }
+          } catch {
+            // Ignore fallback error
+          }
+        }
         setMessName(json.group.messName || 'Mishra Tiffin Centre');
         setMessPhone(json.group.messPhone || '');
 
@@ -144,26 +161,28 @@ export default function SettingsPage() {
       return false;
     }
 
-    // 2. Roommate nickname validations: length 1-20 and unique within group
-    const seenNames = new Set<string>();
-    for (const member of data?.members || []) {
-      const name = (memberNames[member.id] || member.name || '').trim();
-      if (name.length < 1 || name.length > 20) {
+    // 2. Roommate nickname validations: user can only change their own nickname
+    if (currentMemberId) {
+      const ownName = (memberNames[currentMemberId] ?? '').trim();
+      if (ownName.length < 1 || ownName.length > 20) {
         setMessage({
-          text: `Nickname "${name}" must be between 1 and 20 characters.`,
+          text: `Nickname must be between 1 and 20 characters.`,
           type: 'error',
         });
         return false;
       }
-      const lower = name.toLowerCase();
-      if (seenNames.has(lower)) {
-        setMessage({
-          text: `Roommate nicknames must be unique within the group. Duplicate: "${name}".`,
-          type: 'error',
-        });
-        return false;
+      const ownLower = ownName.toLowerCase();
+      for (const member of data?.members || []) {
+        if (member.id !== currentMemberId) {
+          if (member.name.toLowerCase() === ownLower) {
+            setMessage({
+              text: `Roommate nicknames must be unique within the group. Duplicate: "${ownName}".`,
+              type: 'error',
+            });
+            return false;
+          }
+        }
       }
-      seenNames.add(lower);
     }
 
     return true;
@@ -202,7 +221,7 @@ export default function SettingsPage() {
     try {
       const updatedMembers = data?.members.map((m) => ({
         id: m.id,
-        name: (memberNames[m.id] || m.name).trim(),
+        name: m.id === currentMemberId ? (memberNames[m.id] || m.name).trim() : m.name,
       }));
 
       const res = await fetch('/api/settings', {
@@ -389,38 +408,60 @@ export default function SettingsPage() {
             Roommate Nicknames
           </div>
           <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '12px' }}>
-            Must be 1-20 characters and unique within the group.
+            You can edit your own nickname (1-20 characters, unique in group). Other roommates are read-only.
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {data?.members.map((member) => (
-              <div key={member.id} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span
-                  style={{
-                    width: '12px',
-                    height: '12px',
-                    borderRadius: '50%',
-                    backgroundColor: member.avatarColor || 'var(--primary)',
-                    flexShrink: 0,
-                  }}
-                />
-                <input
-                  type="text"
-                  maxLength={20}
-                  className="input-field"
-                  style={{ padding: '8px 12px' }}
-                  value={memberNames[member.id] || ''}
-                  onChange={(e) =>
-                    setMemberNames((prev) => ({
-                      ...prev,
-                      [member.id]: e.target.value,
-                    }))
-                  }
-                  placeholder="Roommate nickname (1-20 chars)"
-                  disabled={saving}
-                  aria-label={`Nickname for member ${member.name}`}
-                />
-              </div>
-            ))}
+            {data?.members.map((member) => {
+              const isMe = member.id === currentMemberId;
+              return (
+                <div key={member.id} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span
+                    style={{
+                      width: '12px',
+                      height: '12px',
+                      borderRadius: '50%',
+                      backgroundColor: member.avatarColor || 'var(--primary)',
+                      flexShrink: 0,
+                    }}
+                  />
+                  {isMe ? (
+                    <input
+                      type="text"
+                      maxLength={20}
+                      className="input-field"
+                      style={{ padding: '8px 12px' }}
+                      value={memberNames[member.id] ?? ''}
+                      onChange={(e) =>
+                        setMemberNames((prev) => ({
+                          ...prev,
+                          [member.id]: e.target.value,
+                        }))
+                      }
+                      placeholder="Your nickname (1-20 chars)"
+                      disabled={saving}
+                      aria-label={`Nickname for member ${member.name}`}
+                      data-testid={`editable-nickname-${member.id}`}
+                    />
+                  ) : (
+                    <div
+                      data-testid={`readonly-nickname-${member.id}`}
+                      style={{
+                        flex: 1,
+                        padding: '8px 12px',
+                        fontSize: '0.9rem',
+                        color: 'var(--text-secondary)',
+                        backgroundColor: 'var(--surface-hover, rgba(255, 255, 255, 0.04))',
+                        borderRadius: '8px',
+                        border: '1px solid var(--border)',
+                        userSelect: 'text',
+                      }}
+                    >
+                      {member.name}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
 

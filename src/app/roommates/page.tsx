@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import BottomNav from '@/components/BottomNav';
 import Avatar, { AvatarMember } from '@/components/Avatar';
+import PhotoCropModal from '@/components/PhotoCropModal';
 
 interface Member extends AvatarMember {
   id: string;
@@ -24,7 +25,12 @@ export default function RoommatesPage() {
     Record<string, { type: 'success' | 'error'; message: string } | null>
   >({});
 
-  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  // Photo crop modal state
+  const [cropFile, setCropFile] = useState<File | null>(null);
+  const [isCropModalOpen, setIsCropModalOpen] = useState(false);
+  const [isSavingCrop, setIsSavingCrop] = useState(false);
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     async function loadData() {
@@ -51,6 +57,9 @@ export default function RoommatesPage() {
           if (data.members) {
             setMembers(data.members);
           }
+          if (data.currentMemberId && !currentMemberId) {
+            setCurrentMemberId(data.currentMemberId);
+          }
         }
       } catch (err) {
         console.error('Failed to load roommates data:', err);
@@ -59,12 +68,18 @@ export default function RoommatesPage() {
       }
     }
     loadData();
-  }, [router]);
+  }, [router, currentMemberId]);
 
-  /**
-   * Resizes selected image with center-crop square to 256x256, JPEG 0.85 quality.
-   */
-  async function resizeImageToSquareJpeg(file: File): Promise<Blob> {
+  function handleFileSelected(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+
+    if (!file) return;
+
+    if (currentMemberId) {
+      setCardFeedback((prev) => ({ ...prev, [currentMemberId]: null }));
+    }
+
     const fileNameLower = file.name.toLowerCase();
     if (
       file.type === 'image/heic' ||
@@ -72,89 +87,40 @@ export default function RoommatesPage() {
       fileNameLower.endsWith('.heic') ||
       fileNameLower.endsWith('.heif')
     ) {
-      throw new Error(
-        'HEIC images are not directly supported by browsers. Please choose a JPEG, PNG, or WebP photo.'
-      );
+      if (currentMemberId) {
+        setCardFeedback((prev) => ({
+          ...prev,
+          [currentMemberId]: {
+            type: 'error',
+            message:
+              'HEIC images are not directly supported by browsers. Please choose a JPEG, PNG, or WebP photo.',
+          },
+        }));
+      }
+      return;
     }
 
-    return new Promise((resolve, reject) => {
-      const objectUrl = URL.createObjectURL(file);
-      const img = new Image();
-
-      img.onload = () => {
-        URL.revokeObjectURL(objectUrl);
-        try {
-          const sw = img.naturalWidth || img.width;
-          const sh = img.naturalHeight || img.height;
-
-          if (!sw || !sh) {
-            reject(new Error('Invalid image dimensions.'));
-            return;
-          }
-
-          const cropSize = Math.min(sw, sh);
-          const sx = (sw - cropSize) / 2;
-          const sy = (sh - cropSize) / 2;
-
-          const canvas = document.createElement('canvas');
-          canvas.width = 256;
-          canvas.height = 256;
-          const ctx = canvas.getContext('2d');
-          if (!ctx) {
-            reject(new Error('Canvas 2D context is not available.'));
-            return;
-          }
-
-          ctx.drawImage(img, sx, sy, cropSize, cropSize, 0, 0, 256, 256);
-
-          canvas.toBlob(
-            (blob) => {
-              if (blob) {
-                resolve(blob);
-              } else {
-                reject(new Error('Failed to compress image.'));
-              }
-            },
-            'image/jpeg',
-            0.85
-          );
-        } catch (e) {
-          reject(e instanceof Error ? e : new Error('Image canvas resize failed.'));
-        }
-      };
-
-      img.onerror = () => {
-        URL.revokeObjectURL(objectUrl);
-        reject(
-          new Error(
-            'Could not load this file as an image. Please select a valid JPEG, PNG, or WebP photo.'
-          )
-        );
-      };
-
-      img.src = objectUrl;
-    });
+    setCropFile(file);
+    setIsCropModalOpen(true);
   }
 
-  async function handleFileSelected(memberId: string, event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    // Reset file input so the same file can be selected again if needed
-    event.target.value = '';
+  function handleCancelCrop() {
+    setIsCropModalOpen(false);
+    setCropFile(null);
+  }
 
-    if (!file) return;
-
-    setProcessingMemberId(memberId);
-    setCardFeedback((prev) => ({ ...prev, [memberId]: null }));
+  async function handleSaveCroppedPhoto(croppedBlob: Blob) {
+    if (!currentMemberId) return;
+    setIsSavingCrop(true);
+    setProcessingMemberId(currentMemberId);
 
     try {
-      const resizedBlob = await resizeImageToSquareJpeg(file);
-
-      const res = await fetch(`/api/members/${memberId}/photo`, {
+      const res = await fetch(`/api/members/${currentMemberId}/photo`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'image/jpeg',
         },
-        body: resizedBlob,
+        body: croppedBlob,
       });
 
       if (res.status === 401) {
@@ -171,7 +137,7 @@ export default function RoommatesPage() {
       // Update state only after backend confirms!
       setMembers((prev) =>
         prev.map((m) =>
-          m.id === memberId
+          m.id === currentMemberId
             ? {
                 ...m,
                 hasPhoto: true,
@@ -183,17 +149,23 @@ export default function RoommatesPage() {
 
       setCardFeedback((prev) => ({
         ...prev,
-        [memberId]: { type: 'success', message: 'Photo updated successfully!' },
+        [currentMemberId]: { type: 'success', message: 'Photo updated successfully!' },
       }));
+
+      setIsCropModalOpen(false);
+      setCropFile(null);
     } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Photo upload failed.';
       setCardFeedback((prev) => ({
         ...prev,
-        [memberId]: {
+        [currentMemberId]: {
           type: 'error',
-          message: err instanceof Error ? err.message : 'Photo upload failed.',
+          message: errorMsg,
         },
       }));
+      throw err;
     } finally {
+      setIsSavingCrop(false);
       setProcessingMemberId(null);
     }
   }
@@ -272,6 +244,7 @@ export default function RoommatesPage() {
               <div
                 key={member.id}
                 className="card"
+                data-testid={`roommate-card-${member.id}`}
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
@@ -315,92 +288,52 @@ export default function RoommatesPage() {
                   </div>
                 </div>
 
-                {/* Photo Actions: Change photo & Remove photo */}
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    borderTop: '1px solid var(--border)',
-                    paddingTop: '10px',
-                    flexWrap: 'wrap',
-                  }}
-                >
-                  {/* Hidden file input */}
-                  <input
-                    ref={(el) => {
-                      fileInputRefs.current[member.id] = el;
-                    }}
-                    type="file"
-                    accept="image/*"
-                    style={{ display: 'none' }}
-                    onChange={(e) => handleFileSelected(member.id, e)}
-                    data-testid={`file-input-${member.id}`}
-                  />
-
-                  {/* Change photo button (44px+ tap target) */}
-                  <button
-                    type="button"
-                    disabled={isBusy}
-                    onClick={() => fileInputRefs.current[member.id]?.click()}
+                {/* Self-only photo actions: Change photo & Remove photo */}
+                {isMe && (
+                  <div
                     style={{
-                      minHeight: '44px',
-                      minWidth: '44px',
-                      padding: '8px 16px',
-                      borderRadius: '8px',
-                      backgroundColor: 'var(--surface)',
-                      border: '1px solid var(--border)',
-                      color: 'var(--text-primary)',
-                      fontSize: '0.85rem',
-                      fontWeight: 600,
-                      cursor: isBusy ? 'not-allowed' : 'pointer',
-                      display: 'inline-flex',
+                      display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '6px',
-                      opacity: isBusy ? 0.7 : 1,
+                      gap: '10px',
+                      borderTop: '1px solid var(--border)',
+                      paddingTop: '10px',
+                      flexWrap: 'wrap',
                     }}
-                    aria-label={`Change photo for ${member.name}`}
                   >
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                      <circle cx="12" cy="13" r="4" />
-                    </svg>
-                    <span>{isBusy ? 'Processing...' : 'Change photo'}</span>
-                  </button>
+                    {/* Hidden file input */}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/*"
+                      style={{ display: 'none' }}
+                      onChange={handleFileSelected}
+                      data-testid={`file-input-${member.id}`}
+                    />
 
-                  {/* Remove photo button if member has a photo */}
-                  {member.hasPhoto && (
+                    {/* Change photo button (44px+ tap target) */}
                     <button
                       type="button"
-                      disabled={isBusy}
-                      onClick={() => handleRemovePhoto(member.id)}
+                      disabled={isBusy || isSavingCrop}
+                      onClick={() => fileInputRef.current?.click()}
                       style={{
                         minHeight: '44px',
                         minWidth: '44px',
-                        padding: '8px 14px',
+                        padding: '8px 16px',
                         borderRadius: '8px',
-                        backgroundColor: 'transparent',
-                        border: '1px solid transparent',
-                        color: 'var(--danger)',
+                        backgroundColor: 'var(--surface)',
+                        border: '1px solid var(--border)',
+                        color: 'var(--text-primary)',
                         fontSize: '0.85rem',
-                        fontWeight: 500,
-                        cursor: isBusy ? 'not-allowed' : 'pointer',
+                        fontWeight: 600,
+                        cursor: isBusy || isSavingCrop ? 'not-allowed' : 'pointer',
                         display: 'inline-flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: '6px',
+                        opacity: isBusy || isSavingCrop ? 0.7 : 1,
                       }}
-                      aria-label={`Remove photo for ${member.name}`}
+                      aria-label={`Change photo for ${member.name}`}
+                      data-testid={`btn-change-photo-${member.id}`}
                     >
                       <svg
                         width="16"
@@ -412,13 +345,55 @@ export default function RoommatesPage() {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                       >
-                        <polyline points="3 6 5 6 21 6" />
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                        <circle cx="12" cy="13" r="4" />
                       </svg>
-                      <span>Remove photo</span>
+                      <span>{isBusy || isSavingCrop ? 'Processing...' : 'Change photo'}</span>
                     </button>
-                  )}
-                </div>
+
+                    {/* Remove photo button if member has a photo */}
+                    {member.hasPhoto && (
+                      <button
+                        type="button"
+                        disabled={isBusy || isSavingCrop}
+                        onClick={() => handleRemovePhoto(member.id)}
+                        style={{
+                          minHeight: '44px',
+                          minWidth: '44px',
+                          padding: '8px 14px',
+                          borderRadius: '8px',
+                          backgroundColor: 'transparent',
+                          border: '1px solid transparent',
+                          color: 'var(--danger)',
+                          fontSize: '0.85rem',
+                          fontWeight: 500,
+                          cursor: isBusy || isSavingCrop ? 'not-allowed' : 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px',
+                        }}
+                        aria-label={`Remove photo for ${member.name}`}
+                        data-testid={`btn-remove-photo-${member.id}`}
+                      >
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <polyline points="3 6 5 6 21 6" />
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg>
+                        <span>Remove photo</span>
+                      </button>
+                    )}
+                  </div>
+                )}
 
                 {/* Per-card error or success message */}
                 {feedback && (
@@ -437,6 +412,15 @@ export default function RoommatesPage() {
           })}
         </div>
       )}
+
+      {/* Photo Crop and Adjust Modal */}
+      <PhotoCropModal
+        isOpen={isCropModalOpen}
+        imageFile={cropFile}
+        onSave={handleSaveCroppedPhoto}
+        onCancel={handleCancelCrop}
+        isSaving={isSavingCrop}
+      />
 
       <BottomNav />
     </main>

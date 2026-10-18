@@ -151,6 +151,67 @@ describe('Member Profile Photos API Tests', () => {
     });
   });
 
+  describe('2b. Self-Only Editing Enforcement (403)', () => {
+    const roommateBId = 'm-roommate-b';
+
+    it('PUT rejects when member A tries to update member B photo with 403', async () => {
+      const req = new Request(`http://localhost:3000/api/members/${roommateBId}/photo`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'image/jpeg',
+          cookie: `${SESSION_COOKIE_NAME}=${validToken}`, // session belongs to memberId (Aarav/Sujeet), not roommateBId
+        },
+        body: validJpegBuffer,
+      });
+
+      const res = await photoPut(req, { params: Promise.resolve({ id: roommateBId }) });
+      expect(res.status).toBe(403);
+      const json = await res.json();
+      expect(json.error).toBe('Forbidden: you can only update your own profile photo.');
+    });
+
+    it('DELETE rejects when member A tries to remove member B photo with 403', async () => {
+      const req = new Request(`http://localhost:3000/api/members/${roommateBId}/photo`, {
+        method: 'DELETE',
+        headers: {
+          cookie: `${SESSION_COOKIE_NAME}=${validToken}`, // session belongs to memberId, not roommateBId
+        },
+      });
+
+      const res = await photoDelete(req, { params: Promise.resolve({ id: roommateBId }) });
+      expect(res.status).toBe(403);
+      const json = await res.json();
+      expect(json.error).toBe('Forbidden: you can only remove your own profile photo.');
+    });
+
+    it('GET stays same-group (member A can view member B photo)', async () => {
+      vi.spyOn(dbModule, 'query').mockResolvedValueOnce({
+        rows: [
+          {
+            group_id: groupId, // Same group as member A!
+            photo_data: validJpegBuffer,
+            photo_mime: 'image/jpeg',
+          },
+        ],
+        command: 'SELECT',
+        rowCount: 1,
+        oid: 0,
+        fields: [],
+      });
+
+      const req = new Request(`http://localhost:3000/api/members/${roommateBId}/photo`, {
+        method: 'GET',
+        headers: {
+          cookie: `${SESSION_COOKIE_NAME}=${validToken}`,
+        },
+      });
+
+      const res = await photoGet(req, { params: Promise.resolve({ id: roommateBId }) });
+      expect(res.status).toBe(200);
+      expect(res.headers.get('Content-Type')).toBe('image/jpeg');
+    });
+  });
+
   describe('3. Validation: Format & Magic Bytes Checking (400)', () => {
     it('rejects text content pretending to be JPEG with 400', async () => {
       vi.spyOn(dbModule, 'query').mockResolvedValueOnce({
