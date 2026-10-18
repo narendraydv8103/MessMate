@@ -27,6 +27,7 @@ export interface GroupSettings {
 export interface Group {
   id: string;
   name: string;
+  messName?: string;
   auntyPhone: string;
   passcodeHash: string;
   timezone: string;

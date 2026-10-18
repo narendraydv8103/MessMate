@@ -10,6 +10,7 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 CREATE TABLE IF NOT EXISTS groups (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(100) NOT NULL,
+    mess_name VARCHAR(40) NOT NULL DEFAULT 'Mishra Tiffin Centre',
     aunty_phone VARCHAR(20) NOT NULL,
     passcode_hash VARCHAR(255) NOT NULL,
     timezone VARCHAR(50) NOT NULL DEFAULT 'Asia/Kolkata',

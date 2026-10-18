@@ -4,6 +4,7 @@ import { useState } from 'react';
 import ConfirmDialog from './ConfirmDialog';
 
 interface ActionRequiredPanelProps {
+  messName?: string;
   auntyPhone: string;
   telUrl: string;
   whatsappUrl: string;
@@ -16,6 +17,7 @@ interface ActionRequiredPanelProps {
 }
 
 export default function ActionRequiredPanel({
+  messName = 'Mishra Tiffin Centre',
   auntyPhone,
   telUrl,
   whatsappUrl,
@@ -46,9 +48,9 @@ export default function ActionRequiredPanel({
             </svg>
           </div>
           <div>
-            <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#34d399' }}>Aunty Informed</h3>
+            <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#34d399' }}>{messName} Informed</h3>
             <p style={{ fontSize: '0.875rem', color: '#e2e8f0', marginTop: '2px' }}>
-              {informedBy ? `${informedBy} informed Aunty` : 'Aunty was informed'} {formattedDate ? `at ${formattedDate}` : ''}
+              {informedBy ? `${informedBy} informed ${messName}` : `${messName} was informed`} {formattedDate ? `at ${formattedDate}` : ''}
             </p>
           </div>
         </div>
@@ -118,9 +120,9 @@ export default function ActionRequiredPanel({
           </svg>
         </div>
         <div>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fbbf24' }}>Action Required: Alert Aunty!</h3>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fbbf24' }}>Action Required: Alert {messName}!</h3>
           <p style={{ fontSize: '0.875rem', color: '#cbd5e1', marginTop: '2px' }}>
-            Deadline passed with NAHI JAAYENGE or no decision. Please contact Aunty immediately.
+            Deadline passed with NAHI JAAYENGE or no decision. Please contact {messName} immediately.
           </p>
         </div>
       </div>
@@ -171,7 +173,7 @@ export default function ActionRequiredPanel({
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px' }}>
             <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
           </svg>
-          Call Aunty ({auntyPhone})
+          Call {messName} ({auntyPhone})
         </a>
 
         <a
@@ -185,7 +187,7 @@ export default function ActionRequiredPanel({
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px' }}>
             <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
           </svg>
-          WhatsApp Aunty
+          WhatsApp {messName}
         </a>
 
         <button
@@ -199,7 +201,7 @@ export default function ActionRequiredPanel({
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px' }}>
             <polyline points="20 6 9 17 4 12" />
           </svg>
-          I informed Aunty
+          I informed {messName}
         </button>
       </div>
 
@@ -212,9 +214,9 @@ export default function ActionRequiredPanel({
       {/* Confirmation Dialog */}
       <ConfirmDialog
         isOpen={isConfirmOpen}
-        title="Confirm You Informed Aunty"
-        message="Did you contact Aunty (via phone or WhatsApp) to ensure she does not cook for our group?"
-        confirmText="Yes, I Informed Her"
+        title={`Confirm You Informed ${messName}`}
+        message={`Did you contact ${messName} (via phone or WhatsApp) to ensure food is not cooked for our group?`}
+        confirmText={`Yes, I Informed ${messName}`}
         variant="amber"
         isSubmitting={isSubmitting}
         onConfirm={handleConfirmInformed}

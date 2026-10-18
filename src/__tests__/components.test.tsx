@@ -112,16 +112,16 @@ describe('Frontend Component Tests', () => {
       callJobStatus: 'ACTION_REQUIRED',
     };
 
-    it('renders Call Aunty, WhatsApp, and I informed Aunty buttons when ACTION_REQUIRED', () => {
+    it('renders Call Mishra Tiffin Centre, WhatsApp, and I informed Mishra Tiffin Centre buttons when ACTION_REQUIRED', () => {
       render(<ActionRequiredPanel {...mockProps} />);
 
-      const callLink = screen.getByText(/Call Aunty/i).closest('a');
+      const callLink = screen.getByText(/Call Mishra Tiffin Centre/i).closest('a');
       expect(callLink?.getAttribute('href')).toBe('tel:+919876543210');
 
-      const waLink = screen.getByText(/WhatsApp Aunty/i).closest('a');
+      const waLink = screen.getByText(/WhatsApp Mishra Tiffin Centre/i).closest('a');
       expect(waLink?.getAttribute('href')).toContain('https://wa.me/919876543210');
 
-      const informedBtn = screen.getByText(/I informed Aunty/i);
+      const informedBtn = screen.getByText(/I informed Mishra Tiffin Centre/i);
       expect(informedBtn).toBeTruthy();
     });
 
@@ -135,12 +135,12 @@ describe('Frontend Component Tests', () => {
 
       render(<ActionRequiredPanel {...mockProps} onInformedSuccess={handleSuccess} />);
 
-      // Click "I informed Aunty" button
-      const openDialogBtn = screen.getByText(/I informed Aunty/i);
+      // Click "I informed Mishra Tiffin Centre" button
+      const openDialogBtn = screen.getByText(/I informed Mishra Tiffin Centre/i);
       fireEvent.click(openDialogBtn);
 
       // Confirm dialog is open
-      const confirmActionBtn = screen.getByText('Yes, I Informed Her');
+      const confirmActionBtn = screen.getByText('Yes, I Informed Mishra Tiffin Centre');
       fireEvent.click(confirmActionBtn);
 
       await waitFor(() => {
@@ -156,14 +156,14 @@ describe('Frontend Component Tests', () => {
         <ActionRequiredPanel
           {...mockProps}
           callJobStatus="AUNTY_INFORMED"
-          informedBy="Rohan"
+          informedBy="Neeraj Yadav"
           informedAt="2026-10-18T21:35:00+05:30"
         />
       );
 
-      expect(screen.getByText('Aunty Informed')).toBeTruthy();
-      expect(screen.getByText(/Rohan informed Aunty/i)).toBeTruthy();
-      expect(screen.queryByText(/Call Aunty/i)).toBeNull();
+      expect(screen.getByText('Mishra Tiffin Centre Informed')).toBeTruthy();
+      expect(screen.getByText(/Neeraj Yadav informed Mishra Tiffin Centre/i)).toBeTruthy();
+      expect(screen.queryByText(/Call Mishra Tiffin Centre/i)).toBeNull();
     });
   });
 
@@ -349,7 +349,7 @@ describe('Frontend Component Tests', () => {
       render(<HomePage />);
 
       await waitFor(() => {
-        expect(screen.getByText(/Push could not be sent. Please inform Aunty yourself./i)).toBeTruthy();
+        expect(screen.getByText(/Push could not be sent. Please inform Mishra Tiffin Centre yourself./i)).toBeTruthy();
       });
     });
 

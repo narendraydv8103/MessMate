@@ -17,9 +17,10 @@ export async function GET(request: Request) {
     const groupRes = await query<{
       id: string;
       name: string;
+      mess_name: string;
       aunty_phone: string;
       settings: Record<string, unknown>;
-    }>('SELECT id, name, aunty_phone, settings FROM groups WHERE id = $1', [session.groupId]);
+    }>('SELECT id, name, mess_name, aunty_phone, settings FROM groups WHERE id = $1', [session.groupId]);
 
     if (groupRes.rows.length === 0) {
       return NextResponse.json({ error: 'Group not found.' }, { status: 404 });
@@ -60,6 +61,7 @@ export async function GET(request: Request) {
       group: {
         id: group.id,
         name: group.name,
+        messName: group.mess_name || 'Mishra Tiffin Centre',
         auntyPhone: group.aunty_phone,
         settings: group.settings,
       },
@@ -92,7 +94,17 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { auntyPhone, members } = body;
+    const { auntyPhone, messName, members } = body;
+
+    // Validate mess name if provided
+    if (messName !== undefined) {
+      if (typeof messName !== 'string' || messName.trim().length < 1 || messName.trim().length > 40) {
+        return NextResponse.json(
+          { error: 'Mess name must be between 1 and 40 characters.' },
+          { status: 400 }
+        );
+      }
+    }
 
     // Validate Aunty phone if provided
     if (auntyPhone !== undefined) {
@@ -140,7 +152,15 @@ export async function POST(request: Request) {
     }
 
     await withTransaction(async (client) => {
-      // 1. Update auntyPhone if provided
+      // 1. Update messName if provided
+      if (messName) {
+        await client.query('UPDATE groups SET mess_name = $1, updated_at = NOW() WHERE id = $2', [
+          messName.trim(),
+          session.groupId,
+        ]);
+      }
+
+      // 2. Update auntyPhone if provided
       if (auntyPhone) {
         await client.query('UPDATE groups SET aunty_phone = $1, updated_at = NOW() WHERE id = $2', [
           auntyPhone.trim(),
@@ -148,7 +168,7 @@ export async function POST(request: Request) {
         ]);
       }
 
-      // 2. Update member nicknames if provided
+      // 3. Update member nicknames if provided
       if (Array.isArray(members)) {
         for (const m of members) {
           if (m.id && typeof m.name === 'string') {

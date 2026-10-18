@@ -12,6 +12,7 @@ import { useIsOffline } from '@/lib/hooks/useIsOffline';
 import { isPushSupported } from '@/lib/push/client';
 
 interface MealStatusResponse {
+  messName?: string;
   mealDate: string;
   mealPeriod: 'DINNER' | 'LUNCH';
   serverTime: string;
@@ -236,8 +237,9 @@ export default function HomePage() {
   }
 
   // Display status label formatting
+  const messName = status?.messName || 'Mishra Tiffin Centre';
   const rawStatusLabel = status?.statusLabel || 'No Decision';
-  const displayStatusLabel = rawStatusLabel === 'Call Scheduled' ? 'Aunty alert scheduled' : rawStatusLabel;
+  const displayStatusLabel = rawStatusLabel === 'Call Scheduled' ? `${messName} alert scheduled` : rawStatusLabel;
 
   // Determine disabled reason visibly
   let disabledReason: string | null = null;
@@ -246,9 +248,9 @@ export default function HomePage() {
   } else if (status?.callJobStatus === 'MISSED') {
     disabledReason = 'Decision closed: Deadline passed without action (Missed)';
   } else if (status?.callJobStatus === 'AUNTY_INFORMED') {
-    disabledReason = 'Decision closed: Aunty has already been informed';
+    disabledReason = `Decision closed: ${messName} has already been informed`;
   } else if (status?.callJobStatus === 'ACTION_REQUIRED') {
-    disabledReason = 'Decision closed: Deadline passed. Aunty must be alerted directly';
+    disabledReason = `Decision closed: Deadline passed. ${messName} must be alerted directly`;
   } else if ((status && !status.isBeforeDeadline) || isCountdownZero) {
     disabledReason = 'Deadline reached: Meal attendance decisions are now closed';
   } else if (isSubmitting) {
@@ -294,10 +296,10 @@ export default function HomePage() {
           <span style={{ fontSize: '1.4rem' }}>⚠️</span>
           <div>
             <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#f87171' }}>
-              Push could not be sent. Please inform Aunty yourself.
+              Push could not be sent. Please inform {messName} yourself.
             </h3>
             <p style={{ fontSize: '0.8rem', color: '#cbd5e1', marginTop: '2px' }}>
-              Automated push alert failed or is not configured. Use the Call or WhatsApp buttons below to notify Aunty immediately.
+              Automated push alert failed or is not configured. Use the Call or WhatsApp buttons below to notify {messName} immediately.
             </p>
           </div>
         </div>
@@ -518,6 +520,7 @@ export default function HomePage() {
       {/* Action Required Panel (Shown when status is ACTION_REQUIRED or AUNTY_INFORMED) */}
       {status && (
         <ActionRequiredPanel
+          messName={messName}
           auntyPhone={status.auntyPhone}
           telUrl={status.telUrl}
           whatsappUrl={status.whatsappUrl}
@@ -537,7 +540,7 @@ export default function HomePage() {
         message={
           pendingDecision === 'JAAYENGE'
             ? 'Are you sure? This confirms that the group is eating at the mess today. No call will be scheduled.'
-            : 'Are you sure? If not changed before the deadline, Aunty will be alerted that the group will NOT eat.'
+            : `Are you sure? If not changed before the deadline, ${messName} will be alerted that the group will NOT eat.`
         }
         confirmText={pendingDecision === 'JAAYENGE' ? 'Yes, JAAYENGE' : 'Yes, NAHI JAAYENGE'}
         variant={pendingDecision === 'JAAYENGE' ? 'green' : 'red'}

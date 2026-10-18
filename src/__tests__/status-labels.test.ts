@@ -2,9 +2,10 @@ import { describe, it, expect } from 'vitest';
 import { mapStatusLabel } from '@/lib/decisions';
 
 describe('Decision Status Label Mapping', () => {
-  it('should map to "Aunty Informed" when call_job status is AUNTY_INFORMED', () => {
-    expect(mapStatusLabel('NAHI_JAAYENGE', 'AUNTY_INFORMED', false)).toBe('Aunty Informed');
-    expect(mapStatusLabel(null, 'AUNTY_INFORMED', false)).toBe('Aunty Informed');
+  it('should map to "Mishra Tiffin Centre Informed" when call_job status is AUNTY_INFORMED', () => {
+    expect(mapStatusLabel('NAHI_JAAYENGE', 'AUNTY_INFORMED', false)).toBe('Mishra Tiffin Centre Informed');
+    expect(mapStatusLabel(null, 'AUNTY_INFORMED', false)).toBe('Mishra Tiffin Centre Informed');
+    expect(mapStatusLabel(null, 'AUNTY_INFORMED', false, 'Custom Mess')).toBe('Custom Mess Informed');
   });
 
   it('should map to "Action Required" when call_job status is ACTION_REQUIRED', () => {
@@ -12,8 +13,9 @@ describe('Decision Status Label Mapping', () => {
     expect(mapStatusLabel(null, 'ACTION_REQUIRED', false)).toBe('Action Required');
   });
 
-  it('should map to "Call Scheduled" when decision is NAHI_JAAYENGE and job is PENDING', () => {
-    expect(mapStatusLabel('NAHI_JAAYENGE', 'PENDING', true)).toBe('Call Scheduled');
+  it('should map to "Mishra Tiffin Centre alert scheduled" when decision is NAHI_JAAYENGE and job is PENDING', () => {
+    expect(mapStatusLabel('NAHI_JAAYENGE', 'PENDING', true)).toBe('Mishra Tiffin Centre alert scheduled');
+    expect(mapStatusLabel('NAHI_JAAYENGE', 'PENDING', true, 'Custom Mess')).toBe('Custom Mess alert scheduled');
   });
 
   it('should map to "Decision Saved" when decision is JAAYENGE', () => {

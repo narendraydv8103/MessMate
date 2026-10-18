@@ -60,7 +60,10 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number, errorMessage: st
 /**
  * Standardized Hinglish message copy generator per specification.
  */
-export function getStandardNotificationPayload(type: ReminderType): NotificationPayload {
+export function getStandardNotificationPayload(
+  type: ReminderType,
+  messName: string = 'Mishra Tiffin Centre'
+): NotificationPayload {
   switch (type) {
     case 'DAILY_REMINDER':
       return {
@@ -70,7 +73,7 @@ export function getStandardNotificationPayload(type: ReminderType): Notification
       };
     case 'URGENT_INITIAL':
       return {
-        title: 'Aunty ko batana baaki hai!',
+        title: `${messName} ko batana baaki hai!`,
         body: 'Abhi call ya WhatsApp karo.',
         tag: 'messmate-urgent',
       };
@@ -79,7 +82,7 @@ export function getStandardNotificationPayload(type: ReminderType): Notification
     case 'URGENT_ESCALATION_3':
       return {
         title: 'Mess Alert',
-        body: 'Reminder: Aunty ko abhi tak nahi bataya.',
+        body: `Reminder: ${messName} ko abhi tak nahi bataya.`,
         tag: 'messmate-urgent',
       };
   }
@@ -93,7 +96,7 @@ export class WebPushNotifier implements Notifier {
   readonly name = 'web-push';
 
   async notify(
-    group: { id: string; name: string },
+    group: { id: string; name: string; messName?: string; mess_name?: string },
     type: ReminderType,
     customPayload?: Partial<NotificationPayload>
   ): Promise<NotificationResult> {
@@ -119,7 +122,8 @@ export class WebPushNotifier implements Notifier {
     }
 
     // 2. Determine default message copy (strictly title, body, tag)
-    const basePayload = getStandardNotificationPayload(type);
+    const messName = group.messName || group.mess_name || 'Mishra Tiffin Centre';
+    const basePayload = getStandardNotificationPayload(type, messName);
     const finalPayload: NotificationPayload = {
       title: customPayload?.title || basePayload.title,
       body: customPayload?.body || basePayload.body,

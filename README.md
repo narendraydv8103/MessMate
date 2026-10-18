@@ -52,12 +52,12 @@ This script generates a keypair and outputs the values to paste into your enviro
 ### 3. Database Migrations & Seeding
 Ensure `DATABASE_URL`, `AUNTY_PHONE`, and `SEED_PASSCODE` are set in your environment:
 ```bash
-npm run seed
+npm run db:seed
 ```
 This will:
 1. Sequentially apply all versioned SQL migrations in `src/lib/db/migrations/`.
 2. Create the default group with the hashed passcode and Aunty's phone number.
-3. Seed the 4 initial roommates (Aarav, Kabir, Rohan, Vivaan).
+3. Seed the 4 roommates (Sujeet Yadav, Mahendra Singh Yadav, Neeraj Yadav, Devansh Tiwari).
 
 ### 4. Run Development Server
 ```bash

@@ -92,8 +92,8 @@ export async function runSchedulerTick(
   }
 
   // 3. Fetch all groups
-  const groupsRes = await query<{ id: string; name: string; aunty_phone: string }>(
-    'SELECT id, name, aunty_phone FROM groups'
+  const groupsRes = await query<{ id: string; name: string; mess_name: string; aunty_phone: string }>(
+    'SELECT id, name, mess_name, aunty_phone FROM groups'
   );
   const groups = groupsRes.rows;
 
@@ -386,10 +386,14 @@ async function processMealFinalizeAndEscalate(params: ProcessTargetParams): Prom
     }
   });
 
+  const messName = (group as { mess_name?: string; messName?: string }).mess_name ||
+    (group as { mess_name?: string; messName?: string }).messName ||
+    'Mishra Tiffin Centre';
+
   // Dispatch external notifications outside of DB transaction
   if (urgentInitialClaimId) {
     const notifyRes = await notifier.notify(group, 'URGENT_INITIAL', {
-      title: 'Aunty ko batana baaki hai!',
+      title: `${messName} ko batana baaki hai!`,
       body: 'Abhi call ya WhatsApp karo.',
       tag: 'messmate-urgent',
     });
@@ -400,7 +404,7 @@ async function processMealFinalizeAndEscalate(params: ProcessTargetParams): Prom
     summary.actions.escalationsClaimed += 1;
     const notifyRes = await notifier.notify(group, escalationDueType, {
       title: 'Mess Alert',
-      body: 'Reminder: Aunty ko abhi tak nahi bataya.',
+      body: `Reminder: ${messName} ko abhi tak nahi bataya.`,
       tag: 'messmate-urgent',
     });
     await recordNotificationDelivery(escalationClaimId, notifyRes);

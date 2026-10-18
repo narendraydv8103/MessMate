@@ -150,4 +150,64 @@ describe('/api/settings Unit & Validation Tests', () => {
     const body = await res.json();
     expect(body.error).toContain('unique');
   });
+
+  it('POST /api/settings rejects mess name longer than 40 chars or empty with 400', async () => {
+    const token = signSession({
+      memberId: 'm1',
+      groupId: 'g1',
+      memberName: 'Sujeet Yadav',
+    });
+
+    // Too long (41 chars)
+    const longMessName = 'M'.repeat(41);
+    const reqLong = new Request('http://localhost:3000/api/settings', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        cookie: `${SESSION_COOKIE_NAME}=${token}`,
+      },
+      body: JSON.stringify({ messName: longMessName }),
+    });
+    const resLong = await settingsPost(reqLong);
+    expect(resLong.status).toBe(400);
+    const bodyLong = await resLong.json();
+    expect(bodyLong.error).toContain('Mess name must be between 1 and 40 characters');
+
+    // Empty
+    const reqEmpty = new Request('http://localhost:3000/api/settings', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        cookie: `${SESSION_COOKIE_NAME}=${token}`,
+      },
+      body: JSON.stringify({ messName: '   ' }),
+    });
+    const resEmpty = await settingsPost(reqEmpty);
+    expect(resEmpty.status).toBe(400);
+  });
+
+  it('POST /api/settings accepts nickname of exactly 20 characters (Mahendra Singh Yadav)', async () => {
+    const name20Chars = 'Mahendra Singh Yadav';
+    expect(name20Chars.length).toBe(20);
+
+    const token = signSession({
+      memberId: 'm1',
+      groupId: 'g1',
+      memberName: 'Sujeet Yadav',
+    });
+
+    const req = new Request('http://localhost:3000/api/settings', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        cookie: `${SESSION_COOKIE_NAME}=${token}`,
+      },
+      body: JSON.stringify({
+        members: [{ id: 'm1', name: name20Chars }],
+      }),
+    });
+    const res = await settingsPost(req);
+    // Since mock db is not connected, it will either throw 500 or proceed past validation; but it MUST NOT return 400 validation error
+    expect(res.status).not.toBe(400);
+  });
 });

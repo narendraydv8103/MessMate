@@ -28,30 +28,28 @@ export function getMealLockKey(groupId: string, mealDate: string, mealPeriod: st
 /**
  * Status label mapping rules:
  * - Decision Saved: when decision is JAAYENGE (and call_job is CANCELLED)
- * - Call Scheduled: when decision is NAHI_JAAYENGE and call_job is PENDING before deadline
+ * - [Mess Name] alert scheduled: when decision is NAHI_JAAYENGE and call_job is PENDING before deadline
  * - Action Required: when call_job is in ACTION_REQUIRED status
- * - Aunty Informed: when call_job is in AUNTY_INFORMED status
+ * - [Mess Name] Informed: when call_job is in AUNTY_INFORMED status
  * - No Decision: when no decision has been entered yet before deadline
  */
 export function mapStatusLabel(
   decision: DecisionType | null,
   jobStatus: CallJobStatus | null,
-  beforeDeadline: boolean
+  beforeDeadline: boolean,
+  messName: string = 'Mishra Tiffin Centre'
 ): string {
   if (jobStatus === 'MISSED') {
     return 'Missed';
   }
   if (jobStatus === 'AUNTY_INFORMED') {
-    return 'Aunty Informed';
+    return `${messName} Informed`;
   }
   if (jobStatus === 'ACTION_REQUIRED') {
     return 'Action Required';
   }
   if (decision === 'NAHI_JAAYENGE') {
-    if (jobStatus === 'PENDING' && beforeDeadline) {
-      return 'Call Scheduled';
-    }
-    return 'Call Scheduled';
+    return `${messName} alert scheduled`;
   }
   if (decision === 'JAAYENGE') {
     return 'Decision Saved';
@@ -128,6 +126,12 @@ export async function submitDecision(
       [trimmedKey, groupId]
     );
 
+    const groupMessRes = await client.query<{ mess_name: string }>(
+      'SELECT mess_name FROM groups WHERE id = $1',
+      [groupId]
+    );
+    const messName = groupMessRes.rows[0]?.mess_name || 'Mishra Tiffin Centre';
+
     if (existingDecisionRes.rows.length > 0) {
       const existingDec = mapDecisionRow(existingDecisionRes.rows[0]);
       const jobRes = await client.query(
@@ -141,7 +145,7 @@ export async function submitDecision(
         isDuplicateSubmission: true,
         decision: existingDec,
         callJob: existingJob!,
-        statusLabel: mapStatusLabel(existingDec.decision, existingJob?.status || null, isBeforeDeadline(now, deadline)),
+        statusLabel: mapStatusLabel(existingDec.decision, existingJob?.status || null, isBeforeDeadline(now, deadline), messName),
       };
     }
 
@@ -215,7 +219,7 @@ export async function submitDecision(
       success: true,
       decision: savedDecision,
       callJob: savedJob,
-      statusLabel: mapStatusLabel(savedDecision.decision, savedJob.status, true),
+      statusLabel: mapStatusLabel(savedDecision.decision, savedJob.status, true, messName),
     };
   });
 }
@@ -231,12 +235,13 @@ export async function getCurrentMealStatus(groupId: string, clock: Clock = new S
   const reminderTime = getReminderTime(now);
   const beforeDeadline = isBeforeDeadline(now, deadline);
 
-  // 1. Fetch group Aunty phone
-  const groupRes = await query<{ aunty_phone: string; name: string }>(
-    'SELECT aunty_phone, name FROM groups WHERE id = $1',
+  // 1. Fetch group Aunty phone & mess name
+  const groupRes = await query<{ aunty_phone: string; name: string; mess_name: string }>(
+    'SELECT aunty_phone, name, mess_name FROM groups WHERE id = $1',
     [groupId]
   );
   const auntyPhone = groupRes.rows[0]?.aunty_phone || '';
+  const messName = groupRes.rows[0]?.mess_name || 'Mishra Tiffin Centre';
 
   // 2. Query latest decision
   const decisionRes = await query(
@@ -289,7 +294,8 @@ export async function getCurrentMealStatus(groupId: string, clock: Clock = new S
   const statusLabel = mapStatusLabel(
     latestDecision?.decision || null,
     callJob?.status || null,
-    beforeDeadline
+    beforeDeadline,
+    messName
   );
 
   const hindiMessage = 'Namaste aunty, aaj hum chaaron mess mein khana khane nahi aayenge. Kripya hamare group ke liye aaj khana mat banaiyega. Dhanyavaad.';
@@ -297,6 +303,7 @@ export async function getCurrentMealStatus(groupId: string, clock: Clock = new S
   const cleanPhone = auntyPhone.replace(/[^0-9+]/g, '');
 
   return {
+    messName,
     mealDate,
     mealPeriod,
     serverTime: now.toISO()!,

@@ -1,11 +1,11 @@
 import bcrypt from 'bcryptjs';
 import { getPool, runMigrations, query } from '../src/lib/db';
 
-const DEFAULT_MEMBERS = [
-  { name: 'Aarav', avatarColor: '#3b82f6' },
-  { name: 'Kabir', avatarColor: '#10b981' },
-  { name: 'Rohan', avatarColor: '#f59e0b' },
-  { name: 'Vivaan', avatarColor: '#ec4899' },
+const TARGET_MEMBERS = [
+  { oldName: 'Aarav', name: 'Sujeet Yadav', avatarColor: '#3b82f6' },
+  { oldName: 'Kabir', name: 'Mahendra Singh Yadav', avatarColor: '#10b981' },
+  { oldName: 'Rohan', name: 'Neeraj Yadav', avatarColor: '#f59e0b' },
+  { oldName: 'Vivaan', name: 'Devansh Tiwari', avatarColor: '#ec4899' },
 ];
 
 async function seed() {
@@ -45,38 +45,63 @@ async function seed() {
 
   if (existingGroups.rows.length > 0) {
     groupId = existingGroups.rows[0].id;
+    await query(
+      `UPDATE groups SET mess_name = COALESCE(NULLIF(mess_name, ''), 'Mishra Tiffin Centre') WHERE id = $1`,
+      [groupId]
+    );
     console.log(`ℹ️ Group already exists: "${existingGroups.rows[0].name}" (${groupId})`);
   } else {
     const groupInsert = await query<{ id: string }>(
-      `INSERT INTO groups (name, aunty_phone, passcode_hash) 
-       VALUES ($1, $2, $3) 
+      `INSERT INTO groups (name, mess_name, aunty_phone, passcode_hash) 
+       VALUES ($1, $2, $3, $4) 
        RETURNING id`,
-      ['MessMate Group', auntyPhone.trim(), hashedPasscode]
+      ['MessMate Group', 'Mishra Tiffin Centre', auntyPhone.trim(), hashedPasscode]
     );
     groupId = groupInsert.rows[0].id;
     console.log(`✅ Created default group: "MessMate Group" (${groupId})`);
-    console.log(`   - Aunty Phone: ${auntyPhone.trim()}`);
+    console.log(`   - Mess Name: Mishra Tiffin Centre`);
+    console.log(`   - Mess Phone: ${auntyPhone.trim()}`);
     console.log(`   - Passcode securely hashed and stored.`);
   }
 
-  // 4. Seed 4 roommates
-  const existingMembers = await query<{ id: string; name: string }>(
-    'SELECT id, name FROM members WHERE group_id = $1',
-    [groupId]
-  );
+  // 4. Seed 4 roommates (renaming placeholders in-place if they exist, or creating anew)
+  for (const m of TARGET_MEMBERS) {
+    const existingTarget = await query<{ id: string }>(
+      'SELECT id FROM members WHERE group_id = $1 AND name = $2',
+      [groupId, m.name]
+    );
 
-  const existingNames = new Set(existingMembers.rows.map((m) => m.name));
+    if (existingTarget.rows.length > 0) {
+      console.log(`ℹ️ Roommate already exists: ${m.name}`);
+      continue;
+    }
 
-  for (const m of DEFAULT_MEMBERS) {
-    if (!existingNames.has(m.name)) {
+    const existingOld = await query<{ id: string }>(
+      'SELECT id FROM members WHERE group_id = $1 AND name = $2',
+      [groupId, m.oldName]
+    );
+
+    if (existingOld.rows.length > 0) {
+      await query(
+        'UPDATE members SET name = $1, avatar_color = $2 WHERE id = $3',
+        [m.name, m.avatarColor, existingOld.rows[0].id]
+      );
+      await query(
+        'UPDATE decisions SET submitted_by_name = $1 WHERE group_id = $2 AND submitted_by_member_id = $3',
+        [m.name, groupId, existingOld.rows[0].id]
+      );
+      await query(
+        'UPDATE call_jobs SET informed_by_name = $1 WHERE group_id = $2 AND informed_by_member_id = $3',
+        [m.name, groupId, existingOld.rows[0].id]
+      );
+      console.log(`🔄 Renamed placeholder "${m.oldName}" -> "${m.name}" in place.`);
+    } else {
       await query(
         `INSERT INTO members (group_id, name, avatar_color) 
          VALUES ($1, $2, $3)`,
         [groupId, m.name, m.avatarColor]
       );
       console.log(`✅ Seeded roommate: ${m.name} (${m.avatarColor})`);
-    } else {
-      console.log(`ℹ️ Roommate already exists: ${m.name}`);
     }
   }
 

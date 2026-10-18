@@ -22,6 +22,7 @@ interface SettingsData {
   group: {
     id: string;
     name: string;
+    messName?: string;
     auntyPhone: string;
     settings: Record<string, unknown>;
   };
@@ -40,6 +41,7 @@ export default function SettingsPage() {
   const router = useRouter();
   const [data, setData] = useState<SettingsData | null>(null);
   const [auntyPhone, setAuntyPhone] = useState('');
+  const [messName, setMessName] = useState('');
   const [memberNames, setMemberNames] = useState<Record<string, string>>({});
 
   const [loading, setLoading] = useState(true);
@@ -47,7 +49,8 @@ export default function SettingsPage() {
   const [loggingOut, setLoggingOut] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
-  // Aunty phone change confirmation modal
+  // Mess name & phone change confirmation modals
+  const [isMessNameConfirmOpen, setIsMessNameConfirmOpen] = useState(false);
   const [isPhoneConfirmOpen, setIsPhoneConfirmOpen] = useState(false);
 
   // Web Push state
@@ -98,6 +101,7 @@ export default function SettingsPage() {
 
         const json: SettingsData = await res.json();
         setData(json);
+        setMessName(json.group.messName || 'Mishra Tiffin Centre');
         setAuntyPhone(json.group.auntyPhone || '');
 
         const namesMap: Record<string, string> = {};
@@ -118,12 +122,22 @@ export default function SettingsPage() {
   }, [router]);
 
   function validateInputs(): boolean {
-    // 1. Aunty phone validation
+    // 0. Mess name validation (1-40 chars)
+    const messNameTrimmed = messName.trim();
+    if (messNameTrimmed.length < 1 || messNameTrimmed.length > 40) {
+      setMessage({
+        text: 'Mess name must be between 1 and 40 characters.',
+        type: 'error',
+      });
+      return false;
+    }
+
+    // 1. Mess phone validation
     const phoneTrimmed = auntyPhone.trim();
     const phoneRegex = /^\+91[6-9]\d{9}$/;
     if (!phoneRegex.test(phoneTrimmed)) {
       setMessage({
-        text: 'Invalid Aunty phone. Must start with +91 followed by 10 digits (e.g. +919876543210).',
+        text: 'Invalid phone number. Must start with +91 followed by 10 digits (e.g. +919876543210).',
         type: 'error',
       });
       return false;
@@ -160,7 +174,15 @@ export default function SettingsPage() {
 
     if (!validateInputs()) return;
 
-    // If Aunty phone changed, require confirmation dialog
+    // Check if mess name changed
+    const originalMessName = (data?.group.messName || 'Mishra Tiffin Centre').trim();
+    const newMessName = messName.trim();
+    if (originalMessName && newMessName !== originalMessName) {
+      setIsMessNameConfirmOpen(true);
+      return;
+    }
+
+    // If mess phone changed, require confirmation dialog
     const originalPhone = (data?.group.auntyPhone || '').trim();
     const newPhone = auntyPhone.trim();
     if (originalPhone && newPhone !== originalPhone) {
@@ -173,6 +195,7 @@ export default function SettingsPage() {
 
   async function performSave() {
     setSaving(true);
+    setIsMessNameConfirmOpen(false);
     setIsPhoneConfirmOpen(false);
 
     try {
@@ -185,6 +208,7 @@ export default function SettingsPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          messName: messName.trim(),
           auntyPhone: auntyPhone.trim(),
           members: updatedMembers,
         }),
@@ -295,7 +319,7 @@ export default function SettingsPage() {
     <main style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '18px' }}>
       <div>
         <h1 style={{ fontSize: '1.5rem', fontWeight: 700 }}>Settings</h1>
-        <p style={{ color: '#94a3b8', fontSize: '0.875rem' }}>Configure Aunty&apos;s phone, nicknames, and alerts</p>
+        <p style={{ color: '#94a3b8', fontSize: '0.875rem' }}>Configure mess details, nicknames, and alerts</p>
       </div>
 
       {message && (
@@ -317,9 +341,27 @@ export default function SettingsPage() {
       )}
 
       <form onSubmit={handleSaveTrigger} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-        {/* Aunty's Phone Card */}
+        {/* Mess Name Card */}
         <div className="card">
-          <h2 style={{ fontSize: '1.1rem', marginBottom: '8px' }}>Aunty&apos;s Phone Number</h2>
+          <h2 style={{ fontSize: '1.1rem', marginBottom: '8px' }}>Mess Name</h2>
+          <p style={{ fontSize: '0.825rem', color: '#94a3b8', marginBottom: '12px' }}>
+            The name of your tiffin service or mess (1-40 characters).
+          </p>
+          <input
+            type="text"
+            maxLength={40}
+            className="input-field"
+            value={messName}
+            onChange={(e) => setMessName(e.target.value)}
+            placeholder="Mishra Tiffin Centre"
+            disabled={saving}
+            id="mess-name-input"
+          />
+        </div>
+
+        {/* Mess Phone Card */}
+        <div className="card">
+          <h2 style={{ fontSize: '1.1rem', marginBottom: '8px' }}>Mess Phone Number</h2>
           <p style={{ fontSize: '0.825rem', color: '#94a3b8', marginBottom: '12px' }}>
             Used for urgent calls and prefilled WhatsApp cancellation messages.
           </p>
@@ -525,11 +567,32 @@ export default function SettingsPage() {
         {loggingOut ? 'Logging out...' : 'Log Out'}
       </button>
 
-      {/* Aunty Phone Change Confirmation Dialog */}
+      {/* Mess Name Change Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={isMessNameConfirmOpen}
+        title="Change Mess Name?"
+        message={`Are you sure you want to update the mess name to "${messName.trim()}"? This name will be displayed across all roommate screens, status badges, and alert notifications.`}
+        confirmText="Confirm Name Change"
+        variant="amber"
+        isSubmitting={saving}
+        onConfirm={async () => {
+          setIsMessNameConfirmOpen(false);
+          const originalPhone = (data?.group.auntyPhone || '').trim();
+          const newPhone = auntyPhone.trim();
+          if (originalPhone && newPhone !== originalPhone) {
+            setIsPhoneConfirmOpen(true);
+          } else {
+            await performSave();
+          }
+        }}
+        onCancel={() => setIsMessNameConfirmOpen(false)}
+      />
+
+      {/* Mess Phone Change Confirmation Dialog */}
       <ConfirmDialog
         isOpen={isPhoneConfirmOpen}
-        title="Change Aunty's Phone Number?"
-        message={`Are you sure you want to change Aunty's phone number to "${auntyPhone.trim()}"? All future calls and cancellation messages will be routed to this number.`}
+        title="Change Mess Phone Number?"
+        message={`Are you sure you want to change the mess phone number to "${auntyPhone.trim()}"? All future calls and cancellation messages will be routed to this number.`}
         confirmText="Confirm Phone Change"
         variant="amber"
         isSubmitting={saving}
