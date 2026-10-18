@@ -53,7 +53,7 @@ describe('Scheduler Engine & Informed Flow Integration (Isolated Schema)', () =>
       CREATE TABLE IF NOT EXISTS ${TEST_SCHEMA}.groups (
           id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
           name VARCHAR(100) NOT NULL,
-          aunty_phone VARCHAR(20) NOT NULL,
+          mess_phone VARCHAR(20) NOT NULL,
           passcode_hash VARCHAR(255) NOT NULL,
           timezone VARCHAR(50) NOT NULL DEFAULT 'Asia/Kolkata',
           settings JSONB NOT NULL DEFAULT '{"notifications_enabled": true}'::jsonb,
@@ -90,7 +90,7 @@ describe('Scheduler Engine & Informed Flow Integration (Isolated Schema)', () =>
           meal_date DATE NOT NULL,
           meal_period VARCHAR(20) NOT NULL CHECK (meal_period IN ('DINNER', 'LUNCH')),
           status VARCHAR(30) NOT NULL DEFAULT 'PENDING' 
-              CHECK (status IN ('PENDING', 'CANCELLED', 'ACTION_REQUIRED', 'AUNTY_INFORMED', 'NOT_CONFIGURED', 'MISSED')),
+              CHECK (status IN ('PENDING', 'CANCELLED', 'ACTION_REQUIRED', 'MESS_INFORMED', 'NOT_CONFIGURED', 'MISSED')),
           scheduled_for TIMESTAMPTZ NOT NULL,
           action_required_at TIMESTAMPTZ NULL,
           informed_by_member_id UUID NULL REFERENCES ${TEST_SCHEMA}.members(id),
@@ -122,7 +122,7 @@ describe('Scheduler Engine & Informed Flow Integration (Isolated Schema)', () =>
     `);
 
     const groupRes = await query<{ id: string }>(
-      `INSERT INTO ${TEST_SCHEMA}.groups (name, aunty_phone, passcode_hash)
+      `INSERT INTO ${TEST_SCHEMA}.groups (name, mess_phone, passcode_hash)
        VALUES ('Scheduler Test Group', '+919999999999', 'fake_hash')
        RETURNING id`
     );

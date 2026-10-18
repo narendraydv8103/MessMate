@@ -2,14 +2,15 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import InstallPrompt from '@/components/InstallPrompt';
 import OfflineBanner from '@/components/OfflineBanner';
+import TopAppBar from '@/components/TopAppBar';
 
 export const metadata: Metadata = {
   title: 'MessMate - Roommates Mess Attendance',
-  description: 'Mobile-first PWA for roommates to coordinate mess meals and alert Aunty',
+  description: 'Mobile-first PWA for roommates to coordinate mess meals and alert Mishra Tiffin Centre',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
-    statusBarStyle: 'black-translucent',
+    statusBarStyle: 'default',
     title: 'MessMate',
   },
   icons: {
@@ -26,7 +27,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#0f172a',
+  themeColor: '#FFFFFF',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
@@ -48,6 +49,7 @@ export default function RootLayout({
       <body>
         <OfflineBanner />
         <div className="app-container">
+          <TopAppBar />
           {children}
           <InstallPrompt />
         </div>

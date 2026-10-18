@@ -47,30 +47,32 @@ export default function HistoryPage() {
 
   return (
     <main style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <div style={{ marginBottom: '8px' }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 700 }}>Meal History</h1>
-        <p style={{ color: '#94a3b8', fontSize: '0.875rem' }}>Past meal attendance decisions and Aunty alerts</p>
+      <div>
+        <h1 style={{ fontSize: '1.4rem', fontWeight: 600, color: 'var(--text-primary)' }}>Meal History</h1>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '2px' }}>
+          Past meal attendance decisions and mess alerts
+        </p>
       </div>
 
       {loading && (
-        <div style={{ textAlign: 'center', padding: '40px 0', color: '#94a3b8' }}>
+        <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-muted)' }}>
           Loading history...
         </div>
       )}
 
       {error && (
-        <div style={{ color: '#f87171', padding: '12px', borderRadius: '12px', backgroundColor: 'var(--red-bg)', border: '1px solid var(--red-border)' }}>
+        <div className="alert-bar alert-bar-danger">
           {error}
         </div>
       )}
 
       {!loading && history.length === 0 && !error && (
-        <div className="card" style={{ textAlign: 'center', padding: '32px 20px', color: '#94a3b8' }}>
+        <div className="card" style={{ textAlign: 'center', padding: '32px 20px', color: 'var(--text-muted)' }}>
           No past meal records found yet.
         </div>
       )}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         {history.map((item, idx) => {
           const badgeClass =
             item.decision === 'JAAYENGE'
@@ -79,15 +81,22 @@ export default function HistoryPage() {
               ? 'badge-red'
               : 'badge-muted';
 
+          const statusColor =
+            item.statusLabel === 'Missed'
+              ? 'var(--danger)'
+              : item.statusLabel.includes('Informed')
+              ? 'var(--success)'
+              : 'var(--text-secondary)';
+
           return (
-            <div key={`${item.date}-${item.mealPeriod}-${idx}`} className="card" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div key={`${item.date}-${item.mealPeriod}-${idx}`} className="card" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <span style={{ fontWeight: 700, fontSize: '1rem', color: '#f8fafc' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
                     {item.date}
                   </span>
-                  <span style={{ marginLeft: '8px', fontSize: '0.85rem', color: '#38bdf8' }}>
-                    {item.mealPeriod === 'DINNER' ? '🌙 Dinner' : '☀️ Lunch'}
+                  <span style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 500 }}>
+                    {item.mealPeriod === 'DINNER' ? 'Dinner' : 'Lunch'}
                   </span>
                 </div>
                 <div className={`badge ${badgeClass}`}>
@@ -95,14 +104,14 @@ export default function HistoryPage() {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem', borderTop: '1px solid var(--border-subtle)', paddingTop: '8px' }}>
-                <span style={{ color: '#94a3b8' }}>Status</span>
-                <span style={{ fontWeight: 600, color: item.statusLabel === 'Missed' ? '#f87171' : item.statusLabel === 'Aunty Informed' ? '#34d399' : '#cbd5e1' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem', borderTop: '1px solid var(--border)', paddingTop: '8px' }}>
+                <span style={{ color: 'var(--text-muted)' }}>Status</span>
+                <span style={{ fontWeight: 600, color: statusColor }}>
                   {item.statusLabel}
                 </span>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#64748b' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
                 <span>
                   {item.submittedByName ? `Decided by ${item.submittedByName}` : 'Auto-evaluated'}
                 </span>
@@ -112,7 +121,7 @@ export default function HistoryPage() {
               </div>
 
               {item.informedByName && (
-                <div style={{ fontSize: '0.75rem', color: '#34d399', backgroundColor: 'var(--green-bg)', padding: '4px 8px', borderRadius: '6px' }}>
+                <div style={{ fontSize: '0.75rem', color: 'var(--success)', backgroundColor: 'var(--success-bg)', padding: '4px 8px', borderRadius: '6px' }}>
                   Informed by {item.informedByName} {item.informedAt ? `(${new Date(item.informedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})` : ''}
                 </div>
               )}

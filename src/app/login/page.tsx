@@ -88,7 +88,7 @@ export default function LoginPage() {
       if (res.status === 429) {
         const retryAfter = data.retryAfterSeconds || 60;
         setLockoutSeconds(retryAfter);
-        setErrorMessage(`Too many failed attempts. Locked out for ${retryAfter}s.`);
+        setErrorMessage(`Too many failed attempts. Locked out for ${retryAfter} seconds.`);
         return;
       }
 
@@ -108,48 +108,45 @@ export default function LoginPage() {
   }
 
   return (
-    <main style={{ padding: '24px 20px', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-      <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-        <div style={{ display: 'inline-flex', padding: '12px', borderRadius: '24px', backgroundColor: '#1e293b', marginBottom: '16px' }}>
-          <Image src="/icons/icon-192.svg" alt="MessMate Logo" width={64} height={64} unoptimized />
+    <main style={{ padding: '24px 20px', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', backgroundColor: 'var(--bg)' }}>
+      <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+        <div style={{ display: 'inline-flex', padding: '10px', borderRadius: '16px', backgroundColor: 'var(--primary)', marginBottom: '14px', boxShadow: '0 2px 4px rgba(29, 78, 216, 0.2)' }}>
+          <Image src="/icons/icon-192.svg" alt="MessMate Logo" width={56} height={56} unoptimized />
         </div>
-        <h1 style={{ fontSize: '1.75rem', fontWeight: 800, letterSpacing: '-0.03em' }}>MessMate</h1>
-        <p style={{ marginTop: '6px', color: '#94a3b8' }}>Roommates Mess Attendance Coordinator</p>
+        <h1 style={{ fontSize: '1.6rem', fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
+          MessMate
+        </h1>
+        <p style={{ marginTop: '4px', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+          Roommates Mess Attendance Coordinator
+        </p>
       </div>
 
       <div className="card" style={{ maxWidth: '400px', margin: '0 auto', width: '100%' }}>
-        <h2 style={{ fontSize: '1.2rem', marginBottom: '16px', textAlign: 'center' }}>Who is deciding?</h2>
+        <h2 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '16px', textAlign: 'center' }}>
+          Sign in to your group
+        </h2>
 
         {lockoutSeconds !== null && lockoutSeconds > 0 && (
           <div
             role="alert"
-            style={{
-              backgroundColor: 'rgba(239, 68, 68, 0.2)',
-              border: '1px solid var(--red-border)',
-              borderRadius: '12px',
-              padding: '12px 14px',
-              color: '#f87171',
-              fontSize: '0.875rem',
-              fontWeight: 600,
-              marginBottom: '18px',
-              textAlign: 'center',
-            }}
+            className="alert-bar alert-bar-danger"
+            style={{ marginBottom: '16px', flexDirection: 'column', alignItems: 'flex-start' }}
           >
-            🔒 Account locked out due to multiple failed attempts.
-            <div style={{ marginTop: '4px', fontSize: '1rem', fontWeight: 700 }}>
-              Try again in {lockoutSeconds} seconds
+            <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>Account temporarily locked</div>
+            <div style={{ fontSize: '0.8rem', marginTop: '2px' }}>
+              Too many failed attempts. Try again in {lockoutSeconds} seconds.
             </div>
           </div>
         )}
 
-        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {/* Roommate Selector */}
           <div>
-            <label htmlFor="roommate-select" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '8px' }}>
+            <label htmlFor="roommate-select" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-secondary)', marginBottom: '6px' }}>
               Select Roommate
             </label>
             {fetchingMembers ? (
-              <div style={{ color: '#64748b', fontSize: '0.9rem', padding: '10px 0' }}>Loading roommates...</div>
+              <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem', padding: '8px 0' }}>Loading roommates...</div>
             ) : (
               <select
                 id="roommate-select"
@@ -169,7 +166,7 @@ export default function LoginPage() {
 
           {/* Group Passcode Input */}
           <div>
-            <label htmlFor="passcode-input" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '8px' }}>
+            <label htmlFor="passcode-input" style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-secondary)', marginBottom: '6px' }}>
               Group Passcode
             </label>
             <input
@@ -189,18 +186,18 @@ export default function LoginPage() {
           </div>
 
           {errorMessage && lockoutSeconds === null && (
-            <div role="alert" style={{ color: '#f87171', fontSize: '0.875rem', textAlign: 'center' }}>
+            <div role="alert" className="alert-bar alert-bar-danger" style={{ textAlign: 'center', justifyContent: 'center' }}>
               {errorMessage}
             </div>
           )}
 
           <button
             type="submit"
-            className="btn btn-jaayenge"
+            className="btn btn-primary"
             disabled={loading || lockoutSeconds !== null || fetchingMembers}
-            style={{ width: '100%', marginTop: '8px' }}
+            style={{ width: '100%', height: '48px', fontSize: '0.95rem', marginTop: '4px' }}
           >
-            {loading ? 'Logging in...' : 'Enter MessMate'}
+            {loading ? 'Logging in...' : 'Sign In'}
           </button>
         </form>
       </div>

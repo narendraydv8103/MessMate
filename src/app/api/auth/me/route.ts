@@ -16,9 +16,10 @@ export async function GET(request: Request) {
       avatar_color: string;
       group_id: string;
       group_name: string;
-      aunty_phone: string;
+      mess_name: string;
+      mess_phone: string;
     }>(
-      `SELECT m.id, m.name, m.avatar_color, g.id as group_id, g.name as group_name, g.aunty_phone
+      `SELECT m.id, m.name, m.avatar_color, g.id as group_id, g.name as group_name, g.mess_name, g.mess_phone
        FROM members m
        JOIN groups g ON m.group_id = g.id
        WHERE m.id = $1`,
@@ -47,7 +48,8 @@ export async function GET(request: Request) {
       group: {
         id: row.group_id,
         name: row.group_name,
-        auntyPhone: row.aunty_phone,
+        messName: row.mess_name || 'Mishra Tiffin Centre',
+        messPhone: row.mess_phone,
       },
     });
   } catch (error) {

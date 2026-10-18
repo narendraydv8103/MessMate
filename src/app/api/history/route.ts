@@ -51,10 +51,15 @@ export async function GET(request: Request) {
       [session.groupId]
     );
 
+    const groupRes = await query<{ mess_name: string }>(
+      'SELECT mess_name FROM groups WHERE id = $1',
+      [session.groupId]
+    );
+    const messName = groupRes.rows[0]?.mess_name || 'Mishra Tiffin Centre';
+
     const history = res.rows.map((row) => {
       const beforeDeadline = isBeforeDeadline(now);
-      const rawLabel = mapStatusLabel(row.decision, row.status, beforeDeadline);
-      const displayLabel = rawLabel === 'Call Scheduled' ? 'Aunty alert scheduled' : rawLabel;
+      const displayLabel = mapStatusLabel(row.decision, row.status, beforeDeadline, messName);
 
       return {
         date: row.meal_date,

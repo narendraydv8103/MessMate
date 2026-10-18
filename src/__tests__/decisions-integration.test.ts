@@ -34,7 +34,7 @@ describe('Decisions DB Service & Rules Integration (Isolated Schema)', () => {
       CREATE TABLE IF NOT EXISTS ${TEST_SCHEMA}.groups (
           id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
           name VARCHAR(100) NOT NULL,
-          aunty_phone VARCHAR(20) NOT NULL,
+          mess_phone VARCHAR(20) NOT NULL,
           passcode_hash VARCHAR(255) NOT NULL,
           timezone VARCHAR(50) NOT NULL DEFAULT 'Asia/Kolkata',
           settings JSONB NOT NULL DEFAULT '{"notifications_enabled": true, "urgent_escalation_interval_min": 10}'::jsonb,
@@ -74,7 +74,7 @@ describe('Decisions DB Service & Rules Integration (Isolated Schema)', () => {
           meal_date DATE NOT NULL,
           meal_period VARCHAR(20) NOT NULL CHECK (meal_period IN ('DINNER', 'LUNCH')),
           status VARCHAR(30) NOT NULL DEFAULT 'PENDING' 
-              CHECK (status IN ('PENDING', 'CANCELLED', 'ACTION_REQUIRED', 'AUNTY_INFORMED', 'NOT_CONFIGURED')),
+              CHECK (status IN ('PENDING', 'CANCELLED', 'ACTION_REQUIRED', 'MESS_INFORMED', 'NOT_CONFIGURED')),
           scheduled_for TIMESTAMPTZ NOT NULL,
           action_required_at TIMESTAMPTZ NULL,
           informed_by_member_id UUID NULL REFERENCES ${TEST_SCHEMA}.members(id),
@@ -90,7 +90,7 @@ describe('Decisions DB Service & Rules Integration (Isolated Schema)', () => {
 
     // 3. Insert test group and test members
     const groupRes = await query<{ id: string }>(
-      `INSERT INTO ${TEST_SCHEMA}.groups (name, aunty_phone, passcode_hash)
+      `INSERT INTO ${TEST_SCHEMA}.groups (name, mess_phone, passcode_hash)
        VALUES ('Test Group', '+919999999999', 'fake_hash')
        RETURNING id`
     );
@@ -257,7 +257,7 @@ describe('Decisions DB Service & Rules Integration (Isolated Schema)', () => {
     }
   });
 
-  it('rejects decisions if call_job is already in ACTION_REQUIRED or AUNTY_INFORMED', async () => {
+  it('rejects decisions if call_job is already in ACTION_REQUIRED or MESS_INFORMED', async () => {
     if (!isDbAvailable) return;
 
     // Simulate Sunday meal (2026-10-25)
@@ -280,7 +280,7 @@ describe('Decisions DB Service & Rules Integration (Isolated Schema)', () => {
         idempotencyKey: 'idemp-action-req',
         clock,
       })
-    ).rejects.toThrowError('Decisions are closed for this meal period because action was already initiated or Aunty was informed.');
+    ).rejects.toThrowError('Decisions are closed for this meal period because action was already initiated or the mess was informed.');
   });
 
   it('getCurrentMealStatus returns accurate active status and prefilled URLs', async () => {
@@ -291,7 +291,7 @@ describe('Decisions DB Service & Rules Integration (Isolated Schema)', () => {
 
     expect(status.mealDate).toBe('2026-10-19');
     expect(status.mealPeriod).toBe('DINNER');
-    expect(status.auntyPhone).toBe('+919999999999');
+    expect(status.messPhone).toBe('+919999999999');
     expect(status.whatsappUrl).toContain('wa.me');
     expect(status.telUrl).toBe('tel:+919999999999');
   });

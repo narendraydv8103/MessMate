@@ -50,17 +50,19 @@ export default function RoommatesPage() {
 
   return (
     <main style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <div style={{ marginBottom: '8px' }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 700 }}>Roommates</h1>
-        <p style={{ color: '#94a3b8', fontSize: '0.875rem' }}>The 4 members sharing the mess meals</p>
+      <div>
+        <h1 style={{ fontSize: '1.4rem', fontWeight: 600, color: 'var(--text-primary)' }}>Roommates</h1>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '2px' }}>
+          The 4 members sharing the mess meals
+        </p>
       </div>
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '40px 0', color: '#94a3b8' }}>
-          Loading profiles...
+        <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-muted)' }}>
+          Loading roommates...
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {members.map((member) => {
             const isMe = member.id === currentMemberId;
             const initials = member.name
@@ -77,25 +79,24 @@ export default function RoommatesPage() {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '16px',
-                  border: isMe ? '1px solid var(--green-border)' : '1px solid var(--border-subtle)',
-                  backgroundColor: isMe ? 'rgba(16, 185, 129, 0.05)' : 'var(--bg-card)',
+                  gap: '14px',
+                  border: isMe ? '1px solid var(--primary)' : '1px solid var(--border)',
+                  backgroundColor: isMe ? 'var(--info-bg)' : 'var(--surface)',
                 }}
               >
-                {/* Avatar with custom color */}
+                {/* Simple avatar circle with initials */}
                 <div
                   style={{
-                    width: '52px',
-                    height: '52px',
+                    width: '44px',
+                    height: '44px',
                     borderRadius: '50%',
-                    backgroundColor: member.avatarColor || '#3b82f6',
+                    backgroundColor: member.avatarColor || 'var(--primary)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     color: '#ffffff',
-                    fontWeight: 700,
-                    fontSize: '1.2rem',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                    fontWeight: 600,
+                    fontSize: '1rem',
                     flexShrink: 0,
                   }}
                 >
@@ -104,7 +105,7 @@ export default function RoommatesPage() {
 
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#f8fafc' }}>
+                    <h2 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>
                       {member.name}
                     </h2>
                     {isMe && (
@@ -116,18 +117,18 @@ export default function RoommatesPage() {
                       </span>
                     )}
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '3px' }}>
                     <span
                       style={{
                         display: 'inline-block',
-                        width: '10px',
-                        height: '10px',
+                        width: '8px',
+                        height: '8px',
                         borderRadius: '50%',
-                        backgroundColor: member.avatarColor || '#3b82f6',
+                        backgroundColor: member.avatarColor || 'var(--primary)',
                       }}
                     />
-                    <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
-                      Color: {member.avatarColor || '#3b82f6'}
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                      Color: {member.avatarColor || 'var(--primary)'}
                     </span>
                   </div>
                 </div>

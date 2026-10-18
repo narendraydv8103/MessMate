@@ -23,7 +23,7 @@ interface SettingsData {
     id: string;
     name: string;
     messName?: string;
-    auntyPhone: string;
+    messPhone: string;
     settings: Record<string, unknown>;
   };
   members: Member[];
@@ -40,7 +40,7 @@ interface SettingsData {
 export default function SettingsPage() {
   const router = useRouter();
   const [data, setData] = useState<SettingsData | null>(null);
-  const [auntyPhone, setAuntyPhone] = useState('');
+  const [messPhone, setMessPhone] = useState('');
   const [messName, setMessName] = useState('');
   const [memberNames, setMemberNames] = useState<Record<string, string>>({});
 
@@ -102,7 +102,7 @@ export default function SettingsPage() {
         const json: SettingsData = await res.json();
         setData(json);
         setMessName(json.group.messName || 'Mishra Tiffin Centre');
-        setAuntyPhone(json.group.auntyPhone || '');
+        setMessPhone(json.group.messPhone || '');
 
         const namesMap: Record<string, string> = {};
         json.members.forEach((m) => {
@@ -133,7 +133,7 @@ export default function SettingsPage() {
     }
 
     // 1. Mess phone validation
-    const phoneTrimmed = auntyPhone.trim();
+    const phoneTrimmed = messPhone.trim();
     const phoneRegex = /^\+91[6-9]\d{9}$/;
     if (!phoneRegex.test(phoneTrimmed)) {
       setMessage({
@@ -183,8 +183,8 @@ export default function SettingsPage() {
     }
 
     // If mess phone changed, require confirmation dialog
-    const originalPhone = (data?.group.auntyPhone || '').trim();
-    const newPhone = auntyPhone.trim();
+    const originalPhone = (data?.group.messPhone || '').trim();
+    const newPhone = messPhone.trim();
     if (originalPhone && newPhone !== originalPhone) {
       setIsPhoneConfirmOpen(true);
       return;
@@ -209,7 +209,7 @@ export default function SettingsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messName: messName.trim(),
-          auntyPhone: auntyPhone.trim(),
+          messPhone: messPhone.trim(),
           members: updatedMembers,
         }),
       });
@@ -234,7 +234,7 @@ export default function SettingsPage() {
       if (data) {
         setData({
           ...data,
-          group: { ...data.group, auntyPhone: auntyPhone.trim() },
+          group: { ...data.group, messPhone: messPhone.trim(), messName: messName.trim() },
         });
       }
     } catch {
@@ -255,7 +255,7 @@ export default function SettingsPage() {
       if (result.success) {
         setIsSubscribed(true);
         setPermissionState(Notification.permission);
-        setMessage({ text: 'Web push notifications enabled successfully on this device! 🎉', type: 'success' });
+        setMessage({ text: 'Web push notifications enabled successfully on this device.', type: 'success' });
         // Refresh subscription count
         const refreshRes = await fetch('/api/settings');
         if (refreshRes.ok) {
@@ -279,17 +279,17 @@ export default function SettingsPage() {
       const resJson = await res.json().catch(() => ({}));
 
       if (res.status === 429) {
-        setTestResult(`⏳ ${resJson.error || 'Please wait before sending another test push.'}`);
+        setTestResult(resJson.error || 'Please wait before sending another test push.');
         return;
       }
 
       if (res.ok && resJson.success) {
-        setTestResult(`✓ ${resJson.message || 'Test notification sent to your device!'}`);
+        setTestResult(resJson.message || 'Test notification sent to your device.');
       } else {
-        setTestResult(`✕ ${resJson.error || 'Failed to send test push.'}`);
+        setTestResult(resJson.error || 'Failed to send test push.');
       }
     } catch {
-      setTestResult('✕ Network error while sending test notification.');
+      setTestResult('Network error while sending test notification.');
     } finally {
       setSendingTest(false);
     }
@@ -310,41 +310,37 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <main style={{ padding: '24px 20px', display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh' }}>
-        <p style={{ color: '#94a3b8' }}>Loading settings...</p>
+        <p style={{ color: 'var(--text-muted)' }}>Loading settings...</p>
       </main>
     );
   }
 
   return (
-    <main style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '18px' }}>
+    <main style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 700 }}>Settings</h1>
-        <p style={{ color: '#94a3b8', fontSize: '0.875rem' }}>Configure mess details, nicknames, and alerts</p>
+        <h1 style={{ fontSize: '1.4rem', fontWeight: 600, color: 'var(--text-primary)' }}>Settings</h1>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '2px' }}>
+          Configure mess details, nicknames, and alerts
+        </p>
       </div>
 
       {message && (
         <div
           role="status"
-          style={{
-            padding: '12px 16px',
-            borderRadius: '12px',
-            textAlign: 'center',
-            fontSize: '0.875rem',
-            fontWeight: 600,
-            backgroundColor: message.type === 'success' ? 'var(--green-bg)' : 'var(--red-bg)',
-            border: `1px solid ${message.type === 'success' ? 'var(--green-border)' : 'var(--red-border)'}`,
-            color: message.type === 'success' ? '#34d399' : '#f87171',
-          }}
+          className={`alert-bar ${message.type === 'success' ? 'alert-bar-success' : 'alert-bar-danger'}`}
+          style={{ justifyContent: 'center', textAlign: 'center' }}
         >
           {message.text}
         </div>
       )}
 
-      <form onSubmit={handleSaveTrigger} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+      <form onSubmit={handleSaveTrigger} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         {/* Mess Name Card */}
         <div className="card">
-          <h2 style={{ fontSize: '1.1rem', marginBottom: '8px' }}>Mess Name</h2>
-          <p style={{ fontSize: '0.825rem', color: '#94a3b8', marginBottom: '12px' }}>
+          <label htmlFor="mess-name-input" style={{ display: 'block', fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>
+            Mess Name
+          </label>
+          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '10px' }}>
             The name of your tiffin service or mess (1-40 characters).
           </p>
           <input
@@ -361,25 +357,29 @@ export default function SettingsPage() {
 
         {/* Mess Phone Card */}
         <div className="card">
-          <h2 style={{ fontSize: '1.1rem', marginBottom: '8px' }}>Mess Phone Number</h2>
-          <p style={{ fontSize: '0.825rem', color: '#94a3b8', marginBottom: '12px' }}>
+          <label htmlFor="mess-phone-input" style={{ display: 'block', fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>
+            Mess Phone Number
+          </label>
+          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '10px' }}>
             Used for urgent calls and prefilled WhatsApp cancellation messages.
           </p>
           <input
             type="tel"
             className="input-field"
-            value={auntyPhone}
-            onChange={(e) => setAuntyPhone(e.target.value)}
+            value={messPhone}
+            onChange={(e) => setMessPhone(e.target.value)}
             placeholder="+919876543210"
             disabled={saving}
-            id="aunty-phone-input"
+            id="mess-phone-input"
           />
         </div>
 
         {/* Roommate Nicknames Card */}
         <div className="card">
-          <h2 style={{ fontSize: '1.1rem', marginBottom: '8px' }}>Roommate Nicknames</h2>
-          <p style={{ fontSize: '0.825rem', color: '#94a3b8', marginBottom: '14px' }}>
+          <div style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>
+            Roommate Nicknames
+          </div>
+          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '12px' }}>
             Must be 1-20 characters and unique within the group.
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -390,7 +390,7 @@ export default function SettingsPage() {
                     width: '12px',
                     height: '12px',
                     borderRadius: '50%',
-                    backgroundColor: member.avatarColor || '#3b82f6',
+                    backgroundColor: member.avatarColor || 'var(--primary)',
                     flexShrink: 0,
                   }}
                 />
@@ -398,7 +398,7 @@ export default function SettingsPage() {
                   type="text"
                   maxLength={20}
                   className="input-field"
-                  style={{ padding: '10px 14px' }}
+                  style={{ padding: '8px 12px' }}
                   value={memberNames[member.id] || ''}
                   onChange={(e) =>
                     setMemberNames((prev) => ({
@@ -408,6 +408,7 @@ export default function SettingsPage() {
                   }
                   placeholder="Roommate nickname (1-20 chars)"
                   disabled={saving}
+                  aria-label={`Nickname for member ${member.name}`}
                 />
               </div>
             ))}
@@ -416,63 +417,45 @@ export default function SettingsPage() {
 
         {/* Web Push Notifications Card */}
         <div className="card">
-          <h2 style={{ fontSize: '1.1rem', marginBottom: '8px' }}>Web Push Notifications</h2>
-          <p style={{ fontSize: '0.825rem', color: '#94a3b8', marginBottom: '14px' }}>
+          <div style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>
+            Web Push Notifications
+          </div>
+          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '12px' }}>
             Receive dinner reminder alerts and urgent cancellation notices directly on your phone.
           </p>
 
           {/* iOS Safari instruction banner */}
           {isIosDevice && !isStandalone && (
-            <div
-              style={{
-                backgroundColor: 'rgba(56, 189, 248, 0.1)',
-                border: '1px solid rgba(56, 189, 248, 0.3)',
-                borderRadius: '10px',
-                padding: '10px 12px',
-                fontSize: '0.8rem',
-                color: '#38bdf8',
-                marginBottom: '12px',
-              }}
-            >
-              📱 <strong>iOS requirement:</strong> Push notifications require iOS 16.4+ and adding MessMate to your Home Screen (Share &gt; Add to Home Screen).
+            <div className="alert-bar alert-bar-info" style={{ marginBottom: '12px' }}>
+              <span>iOS requirement: Push notifications require iOS 16.4+ and adding MessMate to your Home Screen (Share &gt; Add to Home Screen).</span>
             </div>
           )}
 
           {/* Push status info */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.85rem', marginBottom: '14px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ color: '#94a3b8' }}>Browser Permission:</span>
+              <span style={{ color: 'var(--text-secondary)' }}>Browser Permission:</span>
               <span
                 style={{
                   fontWeight: 600,
-                  color: permissionState === 'granted' ? '#34d399' : permissionState === 'denied' ? '#f87171' : '#fbbf24',
+                  color: permissionState === 'granted' ? 'var(--success)' : permissionState === 'denied' ? 'var(--danger)' : 'var(--warning)',
                 }}
               >
-                {permissionState.toUpperCase()}
+                {permissionState}
               </span>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ color: '#94a3b8' }}>Devices subscribed for you:</span>
-              <span style={{ fontWeight: 600, color: '#f8fafc' }}>
+              <span style={{ color: 'var(--text-secondary)' }}>Devices subscribed for you:</span>
+              <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
                 {data?.push.memberSubscriptionsCount || 0}
               </span>
             </div>
           </div>
 
           {permissionState === 'denied' && (
-            <div
-              style={{
-                backgroundColor: 'rgba(239, 68, 68, 0.12)',
-                border: '1px solid var(--red-border)',
-                borderRadius: '10px',
-                padding: '10px 12px',
-                fontSize: '0.8rem',
-                color: '#f87171',
-                marginBottom: '14px',
-              }}
-            >
-              ⚠️ Notifications are blocked in this browser. To receive alerts, tap the lock/info icon in your browser address bar and set Notifications to &ldquo;Allow&rdquo;.
+            <div className="alert-bar alert-bar-danger" style={{ marginBottom: '14px' }}>
+              <span>Notifications are blocked in this browser. To receive alerts, open site settings in your browser and allow notifications.</span>
             </div>
           )}
 
@@ -494,48 +477,43 @@ export default function SettingsPage() {
               onClick={handleSendTestPush}
               disabled={sendingTest || !data?.push.isConfigured}
               id="btn-test-push"
-              style={{ width: '100%', borderColor: 'var(--blue-border)', color: '#38bdf8' }}
+              style={{ width: '100%', borderColor: 'var(--primary)', color: 'var(--primary)' }}
             >
               {sendingTest ? 'Sending Test...' : 'Send Test Notification'}
             </button>
 
             {testResult && (
-              <div style={{ fontSize: '0.825rem', textAlign: 'center', marginTop: '4px', color: testResult.startsWith('✓') ? '#34d399' : '#f87171' }}>
+              <div style={{ fontSize: '0.8rem', textAlign: 'center', marginTop: '4px', color: 'var(--text-secondary)' }}>
                 {testResult}
               </div>
             )}
           </div>
         </div>
 
-        {/* Status Panel */}
-        <div className="card" style={{ border: '1px solid var(--border-active)' }}>
-          <h2 style={{ fontSize: '1.1rem', marginBottom: '12px' }}>System Status</h2>
+        {/* System Status Panel */}
+        <div className="card">
+          <div style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '10px' }}>
+            System Status
+          </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '0.85rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.85rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ color: '#94a3b8' }}>Web Push</span>
-              <span
-                className={`badge ${data?.push.isConfigured ? 'badge-green' : 'badge-muted'}`}
-              >
-                {data?.push.isConfigured ? 'VAPID Configured ✓' : 'Push not configured yet'}
+              <span style={{ color: 'var(--text-secondary)' }}>Web Push</span>
+              <span className={`badge ${data?.push.isConfigured ? 'badge-green' : 'badge-muted'}`}>
+                {data?.push.isConfigured ? 'VAPID Configured' : 'Push not configured'}
               </span>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ color: '#94a3b8' }}>Scheduler Heartbeat</span>
-              <span
-                style={{
-                  fontWeight: 600,
-                  color: data?.scheduler.isSchedulerStale ? '#f87171' : '#34d399',
-                }}
-              >
+              <span style={{ color: 'var(--text-secondary)' }}>Scheduler Heartbeat</span>
+              <span style={{ fontWeight: 600, color: data?.scheduler.isSchedulerStale ? 'var(--danger)' : 'var(--success)' }}>
                 {data?.scheduler.isSchedulerStale ? 'Stale' : 'Active'}
               </span>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ color: '#94a3b8' }}>Last Tick Time</span>
-              <span style={{ color: '#cbd5e1' }}>
+              <span style={{ color: 'var(--text-secondary)' }}>Last Tick Time</span>
+              <span style={{ color: 'var(--text-primary)' }}>
                 {data?.scheduler.lastTickAt
                   ? new Date(data.scheduler.lastTickAt).toLocaleString()
                   : 'No heartbeat recorded'}
@@ -546,9 +524,9 @@ export default function SettingsPage() {
 
         <button
           type="submit"
-          className="btn btn-jaayenge"
+          className="btn btn-primary"
           disabled={saving}
-          style={{ width: '100%', marginTop: '4px' }}
+          style={{ width: '100%', height: '48px', fontSize: '0.95rem' }}
           id="btn-save-settings"
         >
           {saving ? 'Saving...' : 'Save Settings'}
@@ -561,7 +539,7 @@ export default function SettingsPage() {
         className="btn btn-secondary"
         onClick={handleLogout}
         disabled={loggingOut}
-        style={{ width: '100%', borderColor: 'var(--red-border)', color: '#f87171' }}
+        style={{ width: '100%', borderColor: 'var(--danger)', color: 'var(--danger)' }}
         id="btn-logout"
       >
         {loggingOut ? 'Logging out...' : 'Log Out'}
@@ -577,8 +555,8 @@ export default function SettingsPage() {
         isSubmitting={saving}
         onConfirm={async () => {
           setIsMessNameConfirmOpen(false);
-          const originalPhone = (data?.group.auntyPhone || '').trim();
-          const newPhone = auntyPhone.trim();
+          const originalPhone = (data?.group.messPhone || '').trim();
+          const newPhone = messPhone.trim();
           if (originalPhone && newPhone !== originalPhone) {
             setIsPhoneConfirmOpen(true);
           } else {
@@ -592,7 +570,7 @@ export default function SettingsPage() {
       <ConfirmDialog
         isOpen={isPhoneConfirmOpen}
         title="Change Mess Phone Number?"
-        message={`Are you sure you want to change the mess phone number to "${auntyPhone.trim()}"? All future calls and cancellation messages will be routed to this number.`}
+        message={`Are you sure you want to change the mess phone number to "${messPhone.trim()}"? All future calls and cancellation messages will be routed to this number.`}
         confirmText="Confirm Phone Change"
         variant="amber"
         isSubmitting={saving}

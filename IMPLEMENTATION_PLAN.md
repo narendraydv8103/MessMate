@@ -1,6 +1,6 @@
 # MessMate - Technical Implementation Plan (Zero-Budget Edition)
 
-MessMate is a zero-budget, mobile-first Progressive Web Application (PWA) tailored for 4 roommates sharing meals at a mess. It coordinates daily meal attendance decisions and ensures the mess owner (Aunty) is reliably informed when the group will not eat at the mess.
+MessMate is a zero-budget, mobile-first Progressive Web Application (PWA) tailored for 4 roommates sharing meals at a mess. It coordinates daily meal attendance decisions and ensures the mess (Mishra Tiffin Centre) is reliably informed when the group will not eat at the mess.
 
 ---
 
@@ -24,10 +24,10 @@ MessMate is a zero-budget, mobile-first Progressive Web Application (PWA) tailor
 |                             Next.js App Router Backend                                |
 |                                                                                       |
 |  All endpoints require authenticated session:                                         |
-|  /api/status   /api/decisions   /api/aunty/informed   /api/settings   /api/auth/*     |
+|  /api/status   /api/decisions   /api/mess/informed    /api/settings   /api/auth/*     |
 |                                                                                       |
 |  PostgreSQL Database (Supabase Free Tier via `pg` Connection Pool):                   |
-|  - groups (Aunty's phone, group passcode, settings)                                  |
+|  - groups (mess phone, group passcode, settings)                                      |
 |  - members (4 roommates pre-seeded)                                                  |
 |  - decisions (Append-only log with BIGSERIAL seq & UNIQUE idempotency_key)            |
 |  - call_jobs (UNIQUE constraint on group + meal_date + meal_period)                   |
@@ -63,15 +63,15 @@ MessMate is a zero-budget, mobile-first Progressive Web Application (PWA) tailor
 +---------------------------------------------------------------------------------------+
 |                               Roommate Urgent Action UI                               |
 |                                                                                       |
-|  Pulsing Alert: "AUNTY KO INFORM KARO!"                                               |
-|  [ Call Aunty ] -> Native tel:+91XXXXXXXXXX link                                      |
-|  [ WhatsApp Aunty ] -> wa.me link prefilled with exact Hindi message:                 |
-|    "Namaste aunty, aaj hum chaaron mess mein khana khane nahi aayenge.                |
+|  Pulsing Alert: "MESS KO INFORM KARO!"                                                |
+|  [ Call Mishra Tiffin Centre ] -> Native tel:+91XXXXXXXXXX link                       |
+|  [ WhatsApp Mishra Tiffin Centre ] -> wa.me link prefilled with exact Hindi message:  |
+|    "Namaste, aaj hum chaaron mess mein khana khane nahi aayenge.                      |
 |     Kripya hamare group ke liye aaj khana mat banaiyega. Dhanyavaad."                 |
 |                                                                                       |
-|  [ Maine Aunty ko inform kar diya ] button -> POST /api/aunty/informed                |
+|  [ Maine Mess ko inform kar diya ] button -> POST /api/mess/informed                  |
 |    - Records informed_by and informed_at                                              |
-|    - Transitions status to `AUNTY_INFORMED` and halts escalations                      |
+|    - Transitions status to `MESS_INFORMED` and halts escalations                      |
 +---------------------------------------------------------------------------------------+
 ```
 
@@ -100,25 +100,24 @@ MessMate is a zero-budget, mobile-first Progressive Web Application (PWA) tailor
    - Stored in the append-only `decisions` log.
    - Transactionally sets any existing `call_jobs` row to `CANCELLED`.
 4. **Deadline Trigger (`tick` after deadline time)**:
-   - Evaluates the latest decision from `decisions` using `ORDER BY seq DESC LIMIT 1`.
-   - **If `JAAYENGE`**: Meal period is marked complete. No notification is sent to Aunty.
+   - Evaluates the latest decision from `decisions` using `ORDER BY seq DESC LIMIT     - **If `JAAYENGE`**: Meal period is marked complete. No notification is sent to the mess.
    - **If `NAHI_JAAYENGE` OR `NO_DECISION`**:
      - Status becomes `ACTION_REQUIRED`.
      - `action_required_at` is set to `NOW()`.
-     - Dispatches initial urgent Web Push to all 4 members: *"Mess Alert: Aunty ko turant inform karo! Tap to open WhatsApp or Call."*
+     - Dispatches initial urgent Web Push to all 4 members: *"Mess Alert: Mishra Tiffin Centre ko turant inform karo! Tap to open WhatsApp or Call."*
 5. **Urgent Escalation Loop (Every 10 Minutes, Max 3 Times)**:
    - At `deadline + 10 min`: If still `ACTION_REQUIRED`, send 2nd urgent push.
    - At `deadline + 20 min`: If still `ACTION_REQUIRED`, send 3rd urgent push.
    - At `deadline + 30 min`: If still `ACTION_REQUIRED`, final urgent push alert.
-   - Escalations cease as soon as any roommate marks `AUNTY_INFORMED`.
-6. **Informing Aunty**:
-   - Roommate clicks **Call Aunty** (`tel:<AUNTY_PHONE>`) or **WhatsApp Aunty** (`wa.me/<AUNTY_PHONE>?text=...`).
+   - Escalations cease as soon as any roommate marks `MESS_INFORMED`.
+6. **Informing the Mess**:
+   - Roommate clicks **Call Mess** (`tel:<MESS_PHONE>`) or **WhatsApp Mess** (`wa.me/<MESS_PHONE>?text=...`).
    - Prefilled WhatsApp Hindi text:
-     > *"Namaste aunty, aaj hum chaaron mess mein khana khane nahi aayenge. Kripya hamare group ke liye aaj khana mat banaiyega. Dhanyavaad."*
-   - Roommate taps **"Maine Aunty ko inform kar diya"**.
-   - Frontend calls `POST /api/aunty/informed`.
-   - Backend transitions status to `AUNTY_INFORMED`, records `informed_by_member_id`, `informed_by_name`, and `informed_at = NOW()`.
-   - **Never auto-mark informed**.
+     > *"Namaste, aaj hum chaaron mess mein khana khane nahi aayenge. Kripya hamare group ke liye aaj khana mat banaiyega. Dhanyavaad."*
+   - Roommate taps **"Maine Mess ko inform kar diya"**.
+   - Frontend calls `POST /api/mess/informed`.
+   - Backend transitions status to `MESS_INFORMED`, records `informed_by_member_id`, `informed_by_name`, and `informed_at = NOW()`.
+   - **Never auto-mark informed**.d**.
 
 ---
 
@@ -144,7 +143,7 @@ MessMate is a zero-budget, mobile-first Progressive Web Application (PWA) tailor
   - `GET /api/status` -> `401 Unauthorized` if unauthenticated.
   - `POST /api/decisions` -> `401 Unauthorized` if unauthenticated.
   - `GET /api/decisions/history` -> `401 Unauthorized` if unauthenticated.
-  - `POST /api/aunty/informed` -> `401 Unauthorized` if unauthenticated.
+  - `POST /api/mess/informed` -> `401 Unauthorized` if unauthenticated.
   - `GET /api/settings` and `PATCH /api/settings` -> `401 Unauthorized` if unauthenticated.
   - `POST /api/push/subscribe` -> `401 Unauthorized` if unauthenticated.
 - **Cron Tick Authorization (`/api/cron/tick`)**:
@@ -224,11 +223,11 @@ The database driver **MUST be `pg` (`Pool`)** connecting to Supabase via its ses
 -- Enable pgcrypto for UUID generation
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
--- 1. Groups Table (Aunty's phone stored here as the single source of truth)
+-- 1. Groups Table (mess phone stored here as the single source of truth)
 CREATE TABLE groups (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(100) NOT NULL,
-    aunty_phone VARCHAR(20) NOT NULL,                -- Source of truth in DB
+    mess_phone VARCHAR(20) NOT NULL,                 -- Source of truth in DB
     passcode_hash VARCHAR(255) NOT NULL,             -- Hashed group passcode
     timezone VARCHAR(50) NOT NULL DEFAULT 'Asia/Kolkata',
     settings JSONB NOT NULL DEFAULT '{"notifications_enabled": true, "urgent_escalation_interval_min": 10}'::jsonb,
@@ -274,7 +273,7 @@ CREATE TABLE call_jobs (
     meal_date DATE NOT NULL,
     meal_period VARCHAR(20) NOT NULL CHECK (meal_period IN ('DINNER', 'LUNCH')),
     status VARCHAR(30) NOT NULL DEFAULT 'PENDING' 
-        CHECK (status IN ('PENDING', 'CANCELLED', 'ACTION_REQUIRED', 'AUNTY_INFORMED', 'NOT_CONFIGURED')),
+        CHECK (status IN ('PENDING', 'CANCELLED', 'ACTION_REQUIRED', 'MESS_INFORMED', 'NOT_CONFIGURED')),
     scheduled_for TIMESTAMPTZ NOT NULL,
     action_required_at TIMESTAMPTZ NULL,
     informed_by_member_id UUID NULL REFERENCES members(id),
@@ -332,7 +331,7 @@ export interface DeadlineActionContext {
   groupId: string;
   mealDate: string;
   mealPeriod: 'DINNER' | 'LUNCH';
-  auntyPhone: string;
+  messPhone: string;
   reason: 'NAHI_JAAYENGE' | 'NO_DECISION';
   urgentMessage: string;
 }
@@ -345,15 +344,15 @@ export interface DeadlineActionResult {
 ```
 
 ### 6.2 ManualNotifyProvider (Default Zero-Budget Provider)
-- **`isConfigured()`**: Returns `true` if `AUNTY_PHONE` is present in DB.
+- **`isConfigured()`**: Returns `true` if `MESS_PHONE` is present in DB.
 - **`executeDeadlineAction(context)`**:
   - Does NOT dial a phone number.
   - Returns `{ status: 'ACTION_REQUIRED' }`.
   - Dispatches high-priority Web Push alerts to all roommates with payload:
     ```json
     {
-      "title": "🚨 AUNTY KO INFORM KARO!",
-      "body": "Aaj mess me koi nahi jaa raha. Kripya Aunty ko WhatsApp ya Call karke inform karein.",
+      "title": "🚨 MESS KO INFORM KARO!",
+      "body": "Aaj mess me koi nahi jaa raha. Kripya mess ko WhatsApp ya Call karke inform karein.",
       "url": "/",
       "tag": "messmate-urgent-action"
     }
@@ -380,12 +379,12 @@ export interface DeadlineActionResult {
 | `/api/auth/login` | `POST` | Public (Rate-limited) | Validates roommate selection & group passcode. Sets signed `httpOnly` session cookie. |
 | `/api/auth/logout` | `POST` | Authenticated | Clears session cookie. |
 | `/api/auth/me` | `GET` | Authenticated | Returns current session's member and group info. |
-| `/api/status` | `GET` | Authenticated | Returns active meal period, IST time, countdown to deadline, latest decision, call_job status (`ACTION_REQUIRED`, `AUNTY_INFORMED`, etc.), Aunty's phone, and formatted WhatsApp link. |
+| `/api/status` | `GET` | Authenticated | Returns active meal period, IST time, countdown to deadline, latest decision, call_job status (`ACTION_REQUIRED`, `MESS_INFORMED`, etc.), mess phone, and formatted WhatsApp link. |
 | `/api/decisions` | `POST` | Authenticated | Transactionally submits decision before deadline with server IST check, locks `call_jobs`, and updates status. |
 | `/api/decisions/history` | `GET` | Authenticated | Returns append-only log of recent decisions for the group audit history. |
-| `/api/aunty/informed` | `POST` | Authenticated | Called when a roommate taps "I informed Aunty". Updates `call_jobs` to `AUNTY_INFORMED`, records member ID, name, timestamp. |
-| `/api/settings` | `GET` | Authenticated | Returns group settings (Aunty's phone, notification preferences). |
-| `/api/settings` | `PATCH` | Authenticated | Updates Aunty's phone in DB or group preferences. |
+| `/api/mess/informed` | `POST` | Authenticated | Called when a roommate taps "I informed the mess". Updates `call_jobs` to `MESS_INFORMED`, records member ID, name, timestamp. |
+| `/api/settings` | `GET` | Authenticated | Returns group settings (mess phone, notification preferences). |
+| `/api/settings` | `PATCH` | Authenticated | Updates mess phone in DB or group preferences. |
 | `/api/cron/tick` | `POST` | `Bearer CRON_SECRET` | 1-min scheduler tick. Checks reminders, evaluates deadlines, transitions to `ACTION_REQUIRED`, and handles 10-min push escalations. |
 | `/api/push/subscribe` | `POST` | Authenticated | Saves/updates Web Push VAPID subscription for the current member. |
 | `/api/push/test` | `POST` | Authenticated | Sends a test push notification to verify browser push capabilities. |
@@ -411,23 +410,23 @@ The UI will be built with modern, sleek styling using Google Fonts (Outfit / Int
      - Activity subtext: *"Decided by [Name] at 7:42 PM"*.
    - **Urgent Action Banner** (Active when `status === 'ACTION_REQUIRED'`):
      - High-visibility warning badge.
-     - **[ Call Aunty ]**: Direct `tel:+91XXXXXXXXXX` action.
-     - **[ WhatsApp Aunty ]**: Direct `wa.me` action prefilled with the exact Hindi message.
-     - **[ Maine Aunty ko inform kar diya ]**: Button opening quick confirmation, setting status to `AUNTY_INFORMED`.
-   - **Aunty Informed Banner** (Active when `status === 'AUNTY_INFORMED'`):
-     - Success badge: *"Aunty was informed by [Name] at 9:34 PM"*.
+     - **[ Call Mishra Tiffin Centre ]**: Direct `tel:+91XXXXXXXXXX` action.
+     - **[ WhatsApp Mishra Tiffin Centre ]**: Direct `wa.me` action prefilled with the exact Hindi message.
+     - **[ Maine Mishra Tiffin Centre ko inform kar diya ]**: Button opening quick confirmation, setting status to `MESS_INFORMED`.
+   - **Mishra Tiffin Centre Informed Banner** (Active when `status === 'MESS_INFORMED'`):
+     - Success badge: *"Mishra Tiffin Centre was informed by [Name] at 9:34 PM"*.
 3. **Roommates Screen (`/roommates`)**:
    - Lists the 4 roommates.
    - Indicates who is currently active on this device.
    - Shows push notification status for each member.
    - Logout button.
 4. **Settings Screen (`/settings`)**:
-   - **Aunty's Phone Number**: Editable field stored directly in Postgres.
+   - **the mess' Phone Number**: Editable field stored directly in Postgres.
    - **Group Passcode**: View / update passcode.
    - **Push Notifications**: Enable/Disable switch with **"Send Test Push"** button.
    - **Schedule Reference**: Explains Mon–Sat 8:00 PM/9:30 PM & Sun 12:30 PM/2:00 PM rules.
 5. **History Screen (`/history`)**:
-   - Reverse-chronological timeline of past meal decisions, who decided, and when Aunty was informed.
+   - Reverse-chronological timeline of past meal decisions, who decided, and when Mishra Tiffin Centre was informed.
 
 ---
 
@@ -485,7 +484,7 @@ We will build comprehensive Vitest tests covering all critical edge cases:
    - Advances clock to deadline (9:30 PM) with `NAHI_JAAYENGE`: verifies `call_jobs` transitions to `ACTION_REQUIRED` and initial urgent push is triggered.
    - Advances clock by +10 min: verifies `URGENT_ESCALATION_1` is logged and sent.
    - Advances clock by +20 min: verifies `URGENT_ESCALATION_2` is logged and sent.
-   - Simulates roommate calling `/api/aunty/informed`: verifies status transitions to `AUNTY_INFORMED`.
+   - Simulates roommate calling `/api/Mishra Tiffin Centre/informed`: verifies status transitions to `MESS_INFORMED`.
    - Advances clock by +30 min: verifies NO further escalations are sent.
 
 ---
@@ -518,7 +517,7 @@ We will build comprehensive Vitest tests covering all critical edge cases:
 | `DATABASE_URL` | **Supabase** | PostgreSQL Database with pooled connection string (`port 6543` / `port 5432` with `sslmode=require`). | **$0 (Free tier)** |
 | `CRON_SECRET` | Self-Generated | 32+ character random secret (`openssl rand -hex 24`). Configured on cron-job.org. | **$0** |
 | `SESSION_SECRET` | Self-Generated | 32+ character random secret for signing session cookies. | **$0** |
-| `AUNTY_PHONE` | Mess Owner | Initial phone number for seed script (subsequently managed directly in DB settings). | **$0** |
+| `MESS_PHONE` | Mess Owner | Initial phone number for seed script (subsequently managed directly in DB settings). | **$0** |
 | `GROUP_PASSCODE` | Seed Script | Passcode used by the 4 roommates to log in (e.g., `mess1234`). | **$0** |
 | `VAPID_PUBLIC_KEY` | Web Push | Generated via `npx web-push generate-vapid-keys`. | **$0** |
 | `VAPID_PRIVATE_KEY` | Web Push | Generated via `npx web-push generate-vapid-keys`. | **$0** |

@@ -6,12 +6,12 @@
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- 1. Groups Table
--- Stores mess configuration, hashed passcode, and Aunty's phone as source of truth.
+-- Stores mess configuration, hashed passcode, and mess phone as source of truth.
 CREATE TABLE IF NOT EXISTS groups (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(100) NOT NULL,
     mess_name VARCHAR(40) NOT NULL DEFAULT 'Mishra Tiffin Centre',
-    aunty_phone VARCHAR(20) NOT NULL,
+    mess_phone VARCHAR(20) NOT NULL,
     passcode_hash VARCHAR(255) NOT NULL,
     timezone VARCHAR(50) NOT NULL DEFAULT 'Asia/Kolkata',
     settings JSONB NOT NULL DEFAULT '{"notifications_enabled": true, "urgent_escalation_interval_min": 10}'::jsonb,
@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS call_jobs (
     meal_date DATE NOT NULL,
     meal_period VARCHAR(20) NOT NULL CHECK (meal_period IN ('DINNER', 'LUNCH')),
     status VARCHAR(30) NOT NULL DEFAULT 'PENDING' 
-        CHECK (status IN ('PENDING', 'CANCELLED', 'ACTION_REQUIRED', 'AUNTY_INFORMED', 'NOT_CONFIGURED')),
+        CHECK (status IN ('PENDING', 'CANCELLED', 'ACTION_REQUIRED', 'MESS_INFORMED', 'NOT_CONFIGURED', 'MISSED')),
     scheduled_for TIMESTAMPTZ NOT NULL,
     action_required_at TIMESTAMPTZ NULL,
     informed_by_member_id UUID NULL REFERENCES members(id),

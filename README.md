@@ -1,6 +1,6 @@
 # MessMate 🍽️
 
-MessMate is a zero-budget, mobile-first Progressive Web App (PWA) designed for 4 roommates sharing meal plans at a mess. It coordinates daily meal attendance decisions (Dinner & Lunch in `Asia/Kolkata` timezone), computes countdowns to deadlines, and alerts the mess owner (Aunty) via direct call/WhatsApp or automated Web Push when the group decides not to eat at the mess.
+MessMate is a zero-budget, mobile-first Progressive Web App (PWA) designed for 4 roommates sharing meal plans at a mess. It coordinates daily meal attendance decisions (Dinner & Lunch in `Asia/Kolkata` timezone), computes countdowns to deadlines, and alerts the mess (Mishra Tiffin Centre) via direct call/WhatsApp or automated Web Push when the group decides not to eat at the mess.
 
 ---
 
@@ -23,7 +23,7 @@ Configure these variables in your deployment environment (e.g. Vercel, Railway, 
 | `DATABASE_URL` | PostgreSQL connection string (supports Supabase transaction pooler) | Yes |
 | `SESSION_SECRET` | Secret used to sign httpOnly session cookies (min 32 characters) | Yes |
 | `CRON_SECRET` | Secret protecting `/api/cron/tick` (min 32 characters) | Yes |
-| `AUNTY_PHONE` | Initial phone number for Mess Owner Aunty (used during seed) | Yes (Seed) |
+| `MESS_PHONE` | Initial phone number for the mess (used during seed) | Yes (Seed) |
 | `SEED_PASSCODE` | Shared group passcode for initial login (used during seed) | Yes (Seed) |
 | `VAPID_PUBLIC_KEY` | VAPID public key for Web Push backend signing | Yes (Push) |
 | `VAPID_PRIVATE_KEY` | VAPID private key for Web Push backend signing | Yes (Push) |
@@ -50,13 +50,13 @@ npm run vapid:generate
 This script generates a keypair and outputs the values to paste into your environment or `.env.local`.
 
 ### 3. Database Migrations & Seeding
-Ensure `DATABASE_URL`, `AUNTY_PHONE`, and `SEED_PASSCODE` are set in your environment:
+Ensure `DATABASE_URL`, `MESS_PHONE`, and `SEED_PASSCODE` are set in your environment:
 ```bash
 npm run db:seed
 ```
 This will:
 1. Sequentially apply all versioned SQL migrations in `src/lib/db/migrations/`.
-2. Create the default group with the hashed passcode and Aunty's phone number.
+2. Create the default group with the hashed passcode and mess phone number.
 3. Seed the 4 roommates (Sujeet Yadav, Mahendra Singh Yadav, Neeraj Yadav, Devansh Tiwari).
 
 ### 4. Run Development Server

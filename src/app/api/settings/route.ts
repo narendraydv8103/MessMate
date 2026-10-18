@@ -5,7 +5,7 @@ import { SystemClock } from '@/lib/scheduler/timezone';
 import { isVapidConfigured } from '@/lib/notify';
 
 // Validates +91 followed by 10 Indian mobile digits (starting with 6, 7, 8, or 9)
-const AUNTY_PHONE_REGEX = /^\+91[6-9]\d{9}$/;
+const MESS_PHONE_REGEX = /^\+91[6-9]\d{9}$/;
 
 export async function GET(request: Request) {
   const session = requireAuth(request);
@@ -18,9 +18,9 @@ export async function GET(request: Request) {
       id: string;
       name: string;
       mess_name: string;
-      aunty_phone: string;
+      mess_phone: string;
       settings: Record<string, unknown>;
-    }>('SELECT id, name, mess_name, aunty_phone, settings FROM groups WHERE id = $1', [session.groupId]);
+    }>('SELECT id, name, mess_name, mess_phone, settings FROM groups WHERE id = $1', [session.groupId]);
 
     if (groupRes.rows.length === 0) {
       return NextResponse.json({ error: 'Group not found.' }, { status: 404 });
@@ -62,7 +62,7 @@ export async function GET(request: Request) {
         id: group.id,
         name: group.name,
         messName: group.mess_name || 'Mishra Tiffin Centre',
-        auntyPhone: group.aunty_phone,
+        messPhone: group.mess_phone,
         settings: group.settings,
       },
       members: membersRes.rows.map((m) => ({
@@ -94,7 +94,8 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { auntyPhone, messName, members } = body;
+    const { messPhone, messName, members } = body;
+    const phoneToUpdate = messPhone;
 
     // Validate mess name if provided
     if (messName !== undefined) {
@@ -106,13 +107,13 @@ export async function POST(request: Request) {
       }
     }
 
-    // Validate Aunty phone if provided
-    if (auntyPhone !== undefined) {
-      if (typeof auntyPhone !== 'string' || !AUNTY_PHONE_REGEX.test(auntyPhone.trim())) {
+    // Validate mess phone if provided
+    if (phoneToUpdate !== undefined) {
+      if (typeof phoneToUpdate !== 'string' || !MESS_PHONE_REGEX.test(phoneToUpdate.trim())) {
         return NextResponse.json(
           {
             error:
-              'Invalid Aunty phone number. Must be a valid Indian phone number starting with +91 followed by 10 digits (e.g. +919876543210).',
+              'Invalid mess phone number. Must be a valid Indian phone number starting with +91 followed by 10 digits (e.g. +919876543210).',
           },
           { status: 400 }
         );
@@ -160,10 +161,10 @@ export async function POST(request: Request) {
         ]);
       }
 
-      // 2. Update auntyPhone if provided
-      if (auntyPhone) {
-        await client.query('UPDATE groups SET aunty_phone = $1, updated_at = NOW() WHERE id = $2', [
-          auntyPhone.trim(),
+      // 2. Update messPhone if provided
+      if (phoneToUpdate) {
+        await client.query('UPDATE groups SET mess_phone = $1, updated_at = NOW() WHERE id = $2', [
+          phoneToUpdate.trim(),
           session.groupId,
         ]);
       }

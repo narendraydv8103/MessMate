@@ -30,7 +30,7 @@ export function getMealLockKey(groupId: string, mealDate: string, mealPeriod: st
  * - Decision Saved: when decision is JAAYENGE (and call_job is CANCELLED)
  * - [Mess Name] alert scheduled: when decision is NAHI_JAAYENGE and call_job is PENDING before deadline
  * - Action Required: when call_job is in ACTION_REQUIRED status
- * - [Mess Name] Informed: when call_job is in AUNTY_INFORMED status
+ * - [Mess Name] Informed: when call_job is in MESS_INFORMED status
  * - No Decision: when no decision has been entered yet before deadline
  */
 export function mapStatusLabel(
@@ -42,7 +42,7 @@ export function mapStatusLabel(
   if (jobStatus === 'MISSED') {
     return 'Missed';
   }
-  if (jobStatus === 'AUNTY_INFORMED') {
+  if (jobStatus === 'MESS_INFORMED') {
     return `${messName} Informed`;
   }
   if (jobStatus === 'ACTION_REQUIRED') {
@@ -83,7 +83,7 @@ export interface SubmitDecisionResult {
  * 2. Idempotency-key lookup (scoped to group: returns original result even after deadline).
  * 3. Deadline check using the Clock (rejects submissions at or after deadline with 422).
  * 4. Ensure call_jobs row exists (INSERT ... ON CONFLICT DO NOTHING) before SELECT ... FOR UPDATE.
- * 5. Verify call_jobs is not already ACTION_REQUIRED or AUNTY_INFORMED.
+ * 5. Verify call_jobs is not already ACTION_REQUIRED or MESS_INFORMED.
  * 6. Write decision and update call_jobs.
  */
 export async function submitDecision(
@@ -176,9 +176,9 @@ export async function submitDecision(
 
     if (lockedJobRes.rows.length > 0) {
       const currentStatus = lockedJobRes.rows[0].status as CallJobStatus;
-      if (currentStatus === 'ACTION_REQUIRED' || currentStatus === 'AUNTY_INFORMED') {
+      if (currentStatus === 'ACTION_REQUIRED' || currentStatus === 'MESS_INFORMED') {
         throw new DecisionError(
-          'Decisions are closed for this meal period because action was already initiated or Aunty was informed.',
+          'Decisions are closed for this meal period because action was already initiated or the mess was informed.',
           422
         );
       }
@@ -235,12 +235,12 @@ export async function getCurrentMealStatus(groupId: string, clock: Clock = new S
   const reminderTime = getReminderTime(now);
   const beforeDeadline = isBeforeDeadline(now, deadline);
 
-  // 1. Fetch group Aunty phone & mess name
-  const groupRes = await query<{ aunty_phone: string; name: string; mess_name: string }>(
-    'SELECT aunty_phone, name, mess_name FROM groups WHERE id = $1',
+  // 1. Fetch group mess phone & mess name
+  const groupRes = await query<{ mess_phone: string; name: string; mess_name: string }>(
+    'SELECT mess_phone, name, mess_name FROM groups WHERE id = $1',
     [groupId]
   );
-  const auntyPhone = groupRes.rows[0]?.aunty_phone || '';
+  const messPhone = groupRes.rows[0]?.mess_phone || '';
   const messName = groupRes.rows[0]?.mess_name || 'Mishra Tiffin Centre';
 
   // 2. Query latest decision
@@ -298,9 +298,9 @@ export async function getCurrentMealStatus(groupId: string, clock: Clock = new S
     messName
   );
 
-  const hindiMessage = 'Namaste aunty, aaj hum chaaron mess mein khana khane nahi aayenge. Kripya hamare group ke liye aaj khana mat banaiyega. Dhanyavaad.';
+  const hindiMessage = 'Namaste, aaj hum chaaron mess mein khana khane nahi aayenge. Kripya hamare group ke liye aaj khana mat banaiyega. Dhanyavaad.';
   const encodedMessage = encodeURIComponent(hindiMessage);
-  const cleanPhone = auntyPhone.replace(/[^0-9+]/g, '');
+  const cleanPhone = messPhone.replace(/[^0-9+]/g, '');
 
   return {
     messName,
@@ -316,7 +316,7 @@ export async function getCurrentMealStatus(groupId: string, clock: Clock = new S
     notes: latestDecision?.notes || null,
     callJobStatus: callJob?.status || null,
     statusLabel,
-    auntyPhone,
+    messPhone,
     prefilledWhatsAppText: hindiMessage,
     whatsappUrl: `https://wa.me/${cleanPhone}?text=${encodedMessage}`,
     telUrl: `tel:${cleanPhone}`,

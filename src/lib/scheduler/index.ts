@@ -92,8 +92,8 @@ export async function runSchedulerTick(
   }
 
   // 3. Fetch all groups
-  const groupsRes = await query<{ id: string; name: string; mess_name: string; aunty_phone: string }>(
-    'SELECT id, name, mess_name, aunty_phone FROM groups'
+  const groupsRes = await query<{ id: string; name: string; mess_name: string; mess_phone: string }>(
+    'SELECT id, name, mess_name, mess_phone FROM groups'
   );
   const groups = groupsRes.rows;
 
@@ -208,13 +208,13 @@ async function processMealFinalizeAndEscalate(params: ProcessTargetParams): Prom
     const latestDecision = decisionRes.rows[0]?.decision || null;
 
     if (latestDecision === 'JAAYENGE') {
-      // Ensure call_jobs is CANCELLED (never overwrite AUNTY_INFORMED)
+      // Ensure call_jobs is CANCELLED (never overwrite MESS_INFORMED)
       await client.query(
         `INSERT INTO call_jobs (group_id, meal_date, meal_period, status, scheduled_for, updated_at)
          VALUES ($1, $2, $3, 'CANCELLED', $4, NOW())
          ON CONFLICT (group_id, meal_date, meal_period)
          DO UPDATE SET status = 'CANCELLED', updated_at = NOW()
-         WHERE call_jobs.status NOT IN ('AUNTY_INFORMED', 'CANCELLED', 'MISSED')`,
+         WHERE call_jobs.status NOT IN ('MESS_INFORMED', 'CANCELLED', 'MISSED')`,
         [group.id, mealDate, mealPeriod, deadline.toJSDate()]
       );
       return;

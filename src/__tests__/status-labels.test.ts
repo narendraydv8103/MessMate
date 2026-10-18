@@ -2,10 +2,10 @@ import { describe, it, expect } from 'vitest';
 import { mapStatusLabel } from '@/lib/decisions';
 
 describe('Decision Status Label Mapping', () => {
-  it('should map to "Mishra Tiffin Centre Informed" when call_job status is AUNTY_INFORMED', () => {
-    expect(mapStatusLabel('NAHI_JAAYENGE', 'AUNTY_INFORMED', false)).toBe('Mishra Tiffin Centre Informed');
-    expect(mapStatusLabel(null, 'AUNTY_INFORMED', false)).toBe('Mishra Tiffin Centre Informed');
-    expect(mapStatusLabel(null, 'AUNTY_INFORMED', false, 'Custom Mess')).toBe('Custom Mess Informed');
+  it('should map to "Mishra Tiffin Centre Informed" when call_job status is MESS_INFORMED', () => {
+    expect(mapStatusLabel('NAHI_JAAYENGE', 'MESS_INFORMED', false)).toBe('Mishra Tiffin Centre Informed');
+    expect(mapStatusLabel(null, 'MESS_INFORMED', false)).toBe('Mishra Tiffin Centre Informed');
+    expect(mapStatusLabel(null, 'MESS_INFORMED', false, 'Custom Mess')).toBe('Custom Mess Informed');
   });
 
   it('should map to "Action Required" when call_job status is ACTION_REQUIRED', () => {

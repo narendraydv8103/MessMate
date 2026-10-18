@@ -105,10 +105,10 @@ describe('Frontend Component Tests', () => {
 
   describe('ActionRequiredPanel Component', () => {
     const mockProps = {
-      auntyPhone: '+919876543210',
+      messPhone: '+919876543210',
       telUrl: 'tel:+919876543210',
       whatsappUrl: 'https://wa.me/919876543210?text=test',
-      prefilledWhatsAppText: 'Namaste aunty, aaj hum nahi aayenge.',
+      prefilledWhatsAppText: 'Namaste, aaj hum chaaron mess mein khana khane nahi aayenge. Kripya hamare group ke liye aaj khana mat banaiyega. Dhanyavaad.',
       callJobStatus: 'ACTION_REQUIRED',
     };
 
@@ -125,7 +125,7 @@ describe('Frontend Component Tests', () => {
       expect(informedBtn).toBeTruthy();
     });
 
-    it('opens confirm dialog and sends POST /api/aunty/informed on confirm', async () => {
+    it('opens confirm dialog and sends POST /api/mess/informed on confirm', async () => {
       const handleSuccess = vi.fn();
       vi.mocked(fetch).mockResolvedValueOnce({
         ok: true,
@@ -144,18 +144,18 @@ describe('Frontend Component Tests', () => {
       fireEvent.click(confirmActionBtn);
 
       await waitFor(() => {
-        expect(fetch).toHaveBeenCalledWith('/api/aunty/informed', expect.objectContaining({
+        expect(fetch).toHaveBeenCalledWith('/api/mess/informed', expect.objectContaining({
           method: 'POST',
         }));
         expect(handleSuccess).toHaveBeenCalledTimes(1);
       });
     });
 
-    it('shows who informed and when once callJobStatus is AUNTY_INFORMED', () => {
+    it('shows who informed and when once callJobStatus is MESS_INFORMED', () => {
       render(
         <ActionRequiredPanel
           {...mockProps}
-          callJobStatus="AUNTY_INFORMED"
+          callJobStatus="MESS_INFORMED"
           informedBy="Neeraj Yadav"
           informedAt="2026-10-18T21:35:00+05:30"
         />
@@ -245,8 +245,8 @@ describe('Frontend Component Tests', () => {
           submittedAt: null,
           statusLabel: 'No Decision',
           callJobStatus: 'PENDING',
-          auntyPhone: '+919876543210',
-          prefilledWhatsAppText: 'Namaste aunty, aaj khana mat banaiyega.',
+          messPhone: '+919876543210',
+          prefilledWhatsAppText: 'Namaste, aaj hum chaaron mess mein khana khane nahi aayenge. Kripya hamare group ke liye aaj khana mat banaiyega. Dhanyavaad.',
           whatsappUrl: 'https://wa.me/919876543210',
           telUrl: 'tel:+919876543210',
           isSchedulerStale: false,
@@ -294,8 +294,8 @@ describe('Frontend Component Tests', () => {
           submittedAt: '2026-10-18T20:31:00+05:30',
           statusLabel: 'Decision Saved',
           callJobStatus: 'CANCELLED',
-          auntyPhone: '+919876543210',
-          prefilledWhatsAppText: 'Namaste aunty',
+          messPhone: '+919876543210',
+          prefilledWhatsAppText: 'Namaste, aaj hum chaaron mess mein khana khane nahi aayenge. Kripya hamare group ke liye aaj khana mat banaiyega. Dhanyavaad.',
           whatsappUrl: 'https://wa.me/919876543210',
           telUrl: 'tel:+919876543210',
           isSchedulerStale: false,
@@ -336,8 +336,8 @@ describe('Frontend Component Tests', () => {
           submittedAt: '2026-10-18T21:00:00+05:30',
           statusLabel: 'Action Required',
           callJobStatus: 'ACTION_REQUIRED',
-          auntyPhone: '+919876543210',
-          prefilledWhatsAppText: 'Namaste aunty',
+          messPhone: '+919876543210',
+          prefilledWhatsAppText: 'Namaste, aaj hum chaaron mess mein khana khane nahi aayenge. Kripya hamare group ke liye aaj khana mat banaiyega. Dhanyavaad.',
           whatsappUrl: 'https://wa.me/919876543210',
           telUrl: 'tel:+919876543210',
           isSchedulerStale: false,
@@ -369,8 +369,8 @@ describe('Frontend Component Tests', () => {
           submittedAt: null,
           statusLabel: 'No Decision',
           callJobStatus: 'PENDING',
-          auntyPhone: '+919876543210',
-          prefilledWhatsAppText: 'Namaste aunty',
+          messPhone: '+919876543210',
+          prefilledWhatsAppText: 'Namaste, aaj hum chaaron mess mein khana khane nahi aayenge. Kripya hamare group ke liye aaj khana mat banaiyega. Dhanyavaad.',
           whatsappUrl: 'https://wa.me/919876543210',
           telUrl: 'tel:+919876543210',
           isSchedulerStale: false,

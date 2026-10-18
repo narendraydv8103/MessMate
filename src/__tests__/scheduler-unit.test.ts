@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { POST as cronTickPost } from '@/app/api/cron/tick/route';
-import { POST as auntyInformedPost } from '@/app/api/aunty/informed/route';
+import { POST as messInformedPost } from '@/app/api/mess/informed/route';
 
 describe('Scheduler & Informed Auth Unit Tests', () => {
   it('rejects /api/cron/tick when Authorization header is missing with 401', async () => {
@@ -36,11 +36,11 @@ describe('Scheduler & Informed Auth Unit Tests', () => {
     expect(res.status).toBe(401);
   });
 
-  it('rejects /api/aunty/informed without valid session with 401', async () => {
-    const req = new Request('http://localhost:3000/api/aunty/informed', {
+  it('rejects /api/mess/informed without valid session with 401', async () => {
+    const req = new Request('http://localhost:3000/api/mess/informed', {
       method: 'POST',
     });
-    const res = await auntyInformedPost(req);
+    const res = await messInformedPost(req);
     expect(res.status).toBe(401);
 
     const body = await res.json();

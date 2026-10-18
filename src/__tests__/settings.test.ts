@@ -18,7 +18,7 @@ describe('/api/settings Unit & Validation Tests', () => {
     const req = new Request('http://localhost:3000/api/settings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ auntyPhone: '+919876543210' }),
+      body: JSON.stringify({ messPhone: '+919876543210' }),
     });
     const res = await settingsPost(req);
     expect(res.status).toBe(401);
@@ -27,7 +27,7 @@ describe('/api/settings Unit & Validation Tests', () => {
     expect(body.error).toBe('Unauthorized');
   });
 
-  it('POST /api/settings rejects invalid Aunty phone formats with 400', async () => {
+  it('POST /api/settings rejects invalid mess phone formats with 400', async () => {
     const token = signSession({
       memberId: 'm1',
       groupId: 'g1',
@@ -52,13 +52,13 @@ describe('/api/settings Unit & Validation Tests', () => {
           'Content-Type': 'application/json',
           cookie: `${SESSION_COOKIE_NAME}=${token}`,
         },
-        body: JSON.stringify({ auntyPhone: invalidPhone }),
+        body: JSON.stringify({ messPhone: invalidPhone }),
       });
       const res = await settingsPost(req);
       expect(res.status, `Expected 400 for ${invalidPhone}`).toBe(400);
 
       const body = await res.json();
-      expect(body.error).toContain('Invalid Aunty phone number');
+      expect(body.error).toContain('Invalid mess phone number');
     }
   });
 

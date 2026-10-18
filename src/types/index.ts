@@ -6,7 +6,7 @@ export type CallJobStatus =
   | 'PENDING'
   | 'CANCELLED'
   | 'ACTION_REQUIRED'
-  | 'AUNTY_INFORMED'
+  | 'MESS_INFORMED'
   | 'NOT_CONFIGURED'
   | 'MISSED';
 
@@ -28,7 +28,7 @@ export interface Group {
   id: string;
   name: string;
   messName?: string;
-  auntyPhone: string;
+  messPhone: string;
   passcodeHash: string;
   timezone: string;
   settings: GroupSettings;

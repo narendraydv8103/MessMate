@@ -74,31 +74,32 @@ export default function InstallPrompt() {
           width: 'calc(100% - 32px)',
           maxWidth: '448px',
           zIndex: 60,
-          border: '1px solid var(--green-border)',
-          backgroundColor: '#1e293b',
+          border: '1px solid var(--border)',
+          backgroundColor: 'var(--surface)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           gap: '12px',
-          padding: '14px 18px',
+          padding: '12px 16px',
+          boxShadow: '0 4px 12px rgba(15, 23, 42, 0.08)',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <Image
             src="/icons/icon-192.svg"
             alt="App Icon"
-            width={38}
-            height={38}
+            width={36}
+            height={36}
             style={{ borderRadius: '8px' }}
             unoptimized
           />
           <div>
-            <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#f8fafc' }}>Install MessMate</div>
-            <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Get instant access from home screen</div>
+            <div style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-primary)' }}>Install MessMate</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Get instant access from home screen</div>
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <button
             type="button"
             onClick={async () => {
@@ -110,8 +111,8 @@ export default function InstallPrompt() {
                 }
               }
             }}
-            className="btn btn-jaayenge"
-            style={{ minHeight: '36px', padding: '6px 14px', fontSize: '0.85rem' }}
+            className="btn btn-primary"
+            style={{ minHeight: '36px', height: '36px', padding: '0 14px', fontSize: '0.8rem' }}
           >
             Install
           </button>
@@ -121,10 +122,11 @@ export default function InstallPrompt() {
             style={{
               background: 'none',
               border: 'none',
-              color: '#94a3b8',
+              color: 'var(--text-muted)',
               cursor: 'pointer',
               padding: '6px',
               minHeight: 'auto',
+              fontSize: '0.9rem',
             }}
             aria-label="Dismiss"
           >
@@ -148,9 +150,10 @@ export default function InstallPrompt() {
           width: 'calc(100% - 32px)',
           maxWidth: '448px',
           zIndex: 60,
-          border: '1px solid var(--border-active)',
-          backgroundColor: '#1e293b',
+          border: '1px solid var(--border)',
+          backgroundColor: 'var(--surface)',
           padding: '12px 16px',
+          boxShadow: '0 4px 12px rgba(15, 23, 42, 0.08)',
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -164,10 +167,10 @@ export default function InstallPrompt() {
               unoptimized
             />
             <div>
-              <div style={{ fontWeight: 600, fontSize: '0.85rem', color: '#f8fafc' }}>Install on iPhone</div>
-              <div style={{ fontSize: '0.75rem', color: '#cbd5e1', marginTop: '2px' }}>
-                Tap <span style={{ fontWeight: 700, color: '#38bdf8' }}>Share ⎋</span> and select{' '}
-                <span style={{ fontWeight: 700, color: '#38bdf8' }}>&ldquo;Add to Home Screen&rdquo;</span>
+              <div style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text-primary)' }}>Install on iPhone</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                Tap <span style={{ fontWeight: 600, color: 'var(--primary)' }}>Share</span> and select{' '}
+                <span style={{ fontWeight: 600, color: 'var(--primary)' }}>&ldquo;Add to Home Screen&rdquo;</span>
               </div>
             </div>
           </div>
@@ -177,10 +180,11 @@ export default function InstallPrompt() {
             style={{
               background: 'none',
               border: 'none',
-              color: '#94a3b8',
+              color: 'var(--text-muted)',
               cursor: 'pointer',
               padding: '4px',
               minHeight: 'auto',
+              fontSize: '0.9rem',
             }}
             aria-label="Dismiss iOS tip"
           >

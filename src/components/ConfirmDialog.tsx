@@ -25,39 +25,69 @@ export default function ConfirmDialog({
 }: ConfirmDialogProps) {
   if (!isOpen) return null;
 
-  const btnClass =
-    variant === 'green'
-      ? 'btn-jaayenge'
-      : variant === 'red'
-      ? 'btn-nahi'
-      : 'btn-informed';
+  const confirmBg =
+    variant === 'green' ? 'var(--success)' : variant === 'red' ? 'var(--danger)' : 'var(--warning)';
 
   return (
-    <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="dialog-title">
+    <div
+      className="modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="dialog-title"
+    >
       <div className="modal-content">
-        <h2 id="dialog-title" style={{ marginBottom: '12px', fontSize: '1.25rem' }}>
+        <h2
+          id="dialog-title"
+          style={{
+            marginBottom: '8px',
+            fontSize: '16px',
+            fontWeight: 600,
+            color: 'var(--text-primary)',
+          }}
+        >
           {title}
         </h2>
-        <p style={{ marginBottom: '24px', color: '#cbd5e1', fontSize: '0.95rem' }}>
+        <p
+          style={{
+            marginBottom: '20px',
+            color: 'var(--text-secondary)',
+            fontSize: '14px',
+            lineHeight: 1.5,
+          }}
+        >
           {message}
         </p>
 
-        <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+        <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
           <button
             type="button"
-            className="btn btn-secondary"
+            className="btn"
             onClick={onCancel}
             disabled={isSubmitting}
-            style={{ flex: 1 }}
+            style={{
+              flex: 1,
+              background: '#FFFFFF',
+              border: '1px solid #CBD5E1',
+              color: 'var(--text-secondary)',
+              fontWeight: 500,
+              minHeight: '44px',
+            }}
           >
             {cancelText}
           </button>
           <button
             type="button"
-            className={`btn ${btnClass}`}
+            className="btn"
             onClick={onConfirm}
             disabled={isSubmitting}
-            style={{ flex: 1.2 }}
+            style={{
+              flex: 1.2,
+              background: confirmBg,
+              color: '#FFFFFF',
+              border: 'none',
+              fontWeight: 600,
+              minHeight: '44px',
+            }}
           >
             {isSubmitting ? 'Confirming...' : confirmText}
           </button>

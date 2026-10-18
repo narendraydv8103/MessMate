@@ -45,8 +45,8 @@ export async function POST(request: Request) {
 
       const job = jobRes.rows[0];
 
-      // If already AUNTY_INFORMED, return existing record idempotently
-      if (job.status === 'AUNTY_INFORMED') {
+      // If already MESS_INFORMED, return existing record idempotently
+      if (job.status === 'MESS_INFORMED') {
         return {
           status: 200,
           body: {
@@ -63,18 +63,18 @@ export async function POST(request: Request) {
         return {
           status: 409,
           body: {
-            error: `Cannot mark Aunty informed when status is ${job.status}. Action is only allowed when status is ACTION_REQUIRED.`,
+            error: `Cannot mark mess informed when status is ${job.status}. Action is only allowed when status is ACTION_REQUIRED.`,
           },
         };
       }
 
-      // Update to AUNTY_INFORMED
+      // Update to MESS_INFORMED
       const updateRes = await client.query<{
         informed_by_name: string;
         informed_at: Date;
       }>(
         `UPDATE call_jobs 
-         SET status = 'AUNTY_INFORMED',
+         SET status = 'MESS_INFORMED',
              informed_by_member_id = $4,
              informed_by_name = $5,
              informed_at = NOW(),
@@ -96,9 +96,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json(result.body, { status: result.status });
   } catch (error) {
-    console.error('Error in /api/aunty/informed:', error);
+    console.error('Error in /api/mess/informed:', error);
     return NextResponse.json(
-      { error: 'An unexpected error occurred while recording Aunty informed.' },
+      { error: 'An unexpected error occurred while recording mess informed.' },
       { status: 500 }
     );
   }

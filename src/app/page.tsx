@@ -25,7 +25,7 @@ interface MealStatusResponse {
   notes?: string | null;
   callJobStatus: string | null;
   statusLabel: string;
-  auntyPhone: string;
+  messPhone: string;
   prefilledWhatsAppText: string;
   whatsappUrl: string;
   telUrl: string;
@@ -231,7 +231,7 @@ export default function HomePage() {
   if (loading && !status) {
     return (
       <main style={{ padding: '24px 20px', display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh' }}>
-        <p style={{ color: '#94a3b8' }}>Loading MessMate status...</p>
+        <p style={{ color: 'var(--text-secondary)' }}>Loading MessMate status...</p>
       </main>
     );
   }
@@ -247,7 +247,7 @@ export default function HomePage() {
     disabledReason = 'You are offline: reconnect to the internet to submit decision';
   } else if (status?.callJobStatus === 'MISSED') {
     disabledReason = 'Decision closed: Deadline passed without action (Missed)';
-  } else if (status?.callJobStatus === 'AUNTY_INFORMED') {
+  } else if (status?.callJobStatus === 'MESS_INFORMED') {
     disabledReason = `Decision closed: ${messName} has already been informed`;
   } else if (status?.callJobStatus === 'ACTION_REQUIRED') {
     disabledReason = `Decision closed: Deadline passed. ${messName} must be alerted directly`;
@@ -283,24 +283,21 @@ export default function HomePage() {
         <div
           role="alert"
           aria-label="Push Delivery Failure Warning"
-          className="card"
-          style={{
-            border: '1px solid rgba(239, 68, 68, 0.5)',
-            backgroundColor: 'rgba(239, 68, 68, 0.15)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-          }}
+          className="alert-bar alert-bar-danger"
           data-testid="push-failed-banner"
         >
-          <span style={{ fontSize: '1.4rem' }}>⚠️</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
           <div>
-            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#f87171' }}>
+            <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>
               Push could not be sent. Please inform {messName} yourself.
-            </h3>
-            <p style={{ fontSize: '0.8rem', color: '#cbd5e1', marginTop: '2px' }}>
+            </div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
               Automated push alert failed or is not configured. Use the Call or WhatsApp buttons below to notify {messName} immediately.
-            </p>
+            </div>
           </div>
         </div>
       )}
@@ -310,20 +307,14 @@ export default function HomePage() {
         <div
           role="region"
           aria-label="No Push Subscriptions Warning"
-          style={{
-            backgroundColor: 'rgba(245, 158, 11, 0.1)',
-            border: '1px solid rgba(245, 158, 11, 0.3)',
-            borderRadius: '12px',
-            padding: '10px 14px',
-            fontSize: '0.85rem',
-            color: '#fbbf24',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-          }}
+          className="alert-bar alert-bar-warning"
           data-testid="no-group-subscriptions-banner"
         >
-          <span>⚠️</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+            <line x1="12" y1="9" x2="12" y2="13" />
+            <line x1="12" y1="17" x2="12.01" y2="17" />
+          </svg>
           <span>No device in your group is subscribed for push notifications. Add your device in Settings to receive alerts.</span>
         </div>
       )}
@@ -333,29 +324,28 @@ export default function HomePage() {
         <div
           role="region"
           aria-label="Push Fallback Notice"
-          style={{
-            backgroundColor: 'rgba(56, 189, 248, 0.08)',
-            border: '1px solid rgba(56, 189, 248, 0.25)',
-            borderRadius: '12px',
-            padding: '10px 14px',
-            fontSize: '0.8rem',
-            color: '#38bdf8',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
+          className="alert-bar alert-bar-info"
+          style={{ justifyContent: 'space-between' }}
         >
-          <span>🔔 Push notifications are disabled or unsupported on this device. Please check MessMate regularly before the deadline!</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>
+            <span>Push notifications are disabled or unsupported on this device. Please check MessMate regularly before the deadline!</span>
+          </div>
           <button
             type="button"
             onClick={() => setShowPushFallback(false)}
             style={{
               background: 'none',
               border: 'none',
-              color: '#38bdf8',
+              color: 'var(--text-muted)',
               cursor: 'pointer',
               padding: '2px 6px',
               minHeight: 'auto',
+              fontSize: '1rem',
+              lineHeight: 1,
             }}
             aria-label="Dismiss banner"
           >
@@ -367,39 +357,35 @@ export default function HomePage() {
       {/* Distinct MISSED Status Banner */}
       {status?.callJobStatus === 'MISSED' && (
         <div
-          className="card"
-          style={{
-            border: '1px solid rgba(239, 68, 68, 0.4)',
-            backgroundColor: 'rgba(239, 68, 68, 0.12)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-          }}
+          className="alert-bar alert-bar-danger"
           data-testid="missed-status-card"
         >
-          <span style={{ fontSize: '1.5rem' }}>⏱️</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+            <circle cx="12" cy="12" r="10" />
+            <polyline points="12 6 12 12 16 14" />
+          </svg>
           <div>
-            <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#f87171' }}>
+            <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>
               Meal Status: Missed
-            </h3>
-            <p style={{ fontSize: '0.825rem', color: '#cbd5e1', marginTop: '2px' }}>
+            </div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
               The deadline passed more than 2 hours ago. No decision was saved and no automated alert was sent.
-            </p>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Header Info Card */}
+      {/* Summary Card */}
       <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
-            <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#38bdf8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Today&apos;s Meal
             </span>
-            <h1 style={{ fontSize: '1.6rem', fontWeight: 800, marginTop: '2px' }}>
-              {status?.mealPeriod === 'DINNER' ? '🌙 Dinner' : '☀️ Lunch'}
+            <h1 style={{ fontSize: '1.4rem', fontWeight: 600, marginTop: '2px', color: 'var(--text-primary)' }}>
+              {status?.mealPeriod === 'DINNER' ? 'Dinner' : 'Lunch'}
             </h1>
-            <p style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: '2px' }}>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px' }}>
               {status?.mealDate}
             </p>
           </div>
@@ -411,11 +397,11 @@ export default function HomePage() {
 
         {/* Live Countdown Sync */}
         {status?.serverTime && status?.deadlineTime && (
-          <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '12px' }}>
-            <span style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <div style={{ borderTop: '1px solid var(--border)', paddingTop: '12px' }}>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 500 }}>
               Deadline Countdown
             </span>
-            <div style={{ marginTop: '4px' }}>
+            <div style={{ marginTop: '6px' }}>
               <CountdownTimer
                 serverTime={status.serverTime}
                 deadlineTime={status.deadlineTime}
@@ -425,30 +411,35 @@ export default function HomePage() {
                 }}
               />
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#64748b', marginTop: '6px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '8px' }}>
               <span>Reminder: {status.reminderTime ? new Date(status.reminderTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}</span>
               <span>Deadline: {status.deadlineTime ? new Date(status.deadlineTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}</span>
             </div>
           </div>
         )}
+      </div>
 
-        {/* Current Decision Details */}
-        <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '12px', fontSize: '0.875rem' }}>
-          <span style={{ color: '#94a3b8' }}>Current group decision: </span>
-          <span style={{ fontWeight: 700, color: status?.decision === 'JAAYENGE' ? '#34d399' : status?.decision === 'NAHI_JAAYENGE' ? '#f87171' : '#cbd5e1' }}>
+      {/* Current Group Decision Card */}
+      <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.875rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>Current group decision</span>
+          <span style={{
+            fontWeight: 600,
+            color: status?.decision === 'JAAYENGE' ? 'var(--success)' : status?.decision === 'NAHI_JAAYENGE' ? 'var(--danger)' : 'var(--text-muted)'
+          }}>
             {status?.decision === 'JAAYENGE' ? 'JAAYENGE' : status?.decision === 'NAHI_JAAYENGE' ? 'NAHI JAAYENGE' : 'None yet'}
           </span>
-          {status?.submittedBy && (
-            <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '4px' }}>
-              Submitted by <span style={{ color: '#cbd5e1' }}>{status.submittedBy}</span>{' '}
-              {status.submittedAt ? `at ${new Date(status.submittedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}
-            </div>
-          )}
         </div>
+        {status?.submittedBy && (
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+            Submitted by <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{status.submittedBy}</span>{' '}
+            {status.submittedAt ? `at ${new Date(status.submittedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}
+          </div>
+        )}
       </div>
 
       {/* Decision Action Buttons */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         <button
           type="button"
           className="btn btn-jaayenge"
@@ -457,7 +448,7 @@ export default function HomePage() {
           id="btn-jaayenge"
           aria-label="Confirm eating at mess (Jaayenge)"
         >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px' }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px' }}>
             <polyline points="20 6 9 17 4 12" />
           </svg>
           JAAYENGE (Khaana Hai)
@@ -471,7 +462,7 @@ export default function HomePage() {
           id="btn-nahi-jaayenge"
           aria-label="Confirm not eating at mess (Nahi Jaayenge)"
         >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px' }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px' }}>
             <line x1="18" y1="6" x2="6" y2="18" />
             <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
@@ -483,17 +474,14 @@ export default function HomePage() {
           <div
             style={{
               textAlign: 'center',
-              padding: '10px 14px',
-              borderRadius: '12px',
-              backgroundColor: 'rgba(255, 255, 255, 0.04)',
-              border: '1px solid var(--border-subtle)',
-              color: '#cbd5e1',
-              fontSize: '0.85rem',
+              padding: '6px 10px',
+              color: 'var(--text-secondary)',
+              fontSize: '0.8rem',
               fontWeight: 500,
             }}
             data-testid="decision-disabled-reason"
           >
-            🔒 {disabledReason}
+            {disabledReason}
           </div>
         )}
       </div>
@@ -502,26 +490,18 @@ export default function HomePage() {
       {feedbackMessage && (
         <div
           role="status"
-          style={{
-            padding: '12px 16px',
-            borderRadius: '12px',
-            textAlign: 'center',
-            fontSize: '0.875rem',
-            fontWeight: 600,
-            backgroundColor: feedbackMessage.type === 'success' ? 'var(--green-bg)' : 'var(--red-bg)',
-            border: `1px solid ${feedbackMessage.type === 'success' ? 'var(--green-border)' : 'var(--red-border)'}`,
-            color: feedbackMessage.type === 'success' ? '#34d399' : '#f87171',
-          }}
+          className={`alert-bar ${feedbackMessage.type === 'success' ? 'alert-bar-success' : 'alert-bar-danger'}`}
+          style={{ justifyContent: 'center', textAlign: 'center' }}
         >
           {feedbackMessage.text}
         </div>
       )}
 
-      {/* Action Required Panel (Shown when status is ACTION_REQUIRED or AUNTY_INFORMED) */}
+      {/* Action Required Panel (Shown when status is ACTION_REQUIRED or MESS_INFORMED) */}
       {status && (
         <ActionRequiredPanel
           messName={messName}
-          auntyPhone={status.auntyPhone}
+          messPhone={status.messPhone}
           telUrl={status.telUrl}
           whatsappUrl={status.whatsappUrl}
           prefilledWhatsAppText={status.prefilledWhatsAppText}
