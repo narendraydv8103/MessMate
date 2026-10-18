@@ -1,3 +1,6 @@
+import { loadEnvConfig } from '@next/env';
+loadEnvConfig(process.cwd());
+
 import { runSchedulerTick } from '../src/lib/scheduler';
 import { SystemClock } from '../src/lib/scheduler/timezone';
 import { getPool } from '../src/lib/db';

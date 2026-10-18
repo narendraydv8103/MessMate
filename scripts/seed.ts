@@ -1,3 +1,6 @@
+import { loadEnvConfig } from '@next/env';
+loadEnvConfig(process.cwd());
+
 import bcrypt from 'bcryptjs';
 import { getPool, runMigrations, query } from '../src/lib/db';
 
@@ -20,13 +23,14 @@ async function seed() {
     );
   }
 
-  const messPhone = process.env.MESS_PHONE;
-  if (!messPhone || messPhone.trim().length === 0) {
+  const rawMessPhone = process.env.MESS_PHONE;
+  if (!rawMessPhone || rawMessPhone.trim().length === 0) {
     throw new Error(
       'Missing required environment variable: MESS_PHONE.\n' +
       'Please define MESS_PHONE in your environment or .env.local (e.g. MESS_PHONE=+91XXXXXXXXXX) before running the seed script.'
     );
   }
+  const messPhone = rawMessPhone.trim().replace(/\s+/g, '');
 
   // 2. Initialize schema & versioned migrations
   console.log('📦 Running database migrations...');
